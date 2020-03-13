@@ -88,6 +88,9 @@ namespace PE
         Shader gbufferdebug;
         Shader phong_shading;
         Shader prerender;
+
+        // Mode for displaying debug info. 0 = no debug info.
+        int debug_mode = 0;
     private:
 
 
@@ -117,8 +120,5 @@ namespace PE
         PrerenderFBO * gBuffer;
 
         Mesh * FSQ;
-
-        // Mode for displaying debug info. 0 = no debug info.
-        int debug_mode = 0;
     };
 }

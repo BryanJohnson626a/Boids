@@ -85,15 +85,15 @@ public:
 class BehaviorStayInArea : public Behavior
 {
 public:
-    BehaviorStayInArea(const Boid * parent, float factor, float check_dist, float minX, float maxX, float minY,
-                       float maxY);
+    BehaviorStayInArea(const Boid * parent, float factor, float check_dist,
+                       PE::Vec3 min, PE::Vec3 max);
     void PopulateTargets() override;
     void AssessTargets() override;
 
     [[nodiscard]] const PE::Material & GetDebugColor() const override
     { return PE::ruby; };
 private:
-    float minX, maxX, minY, maxY;
+    PE::Vec3 min, max;
 };
 
 class BehaviorStayOutArea : public Behavior

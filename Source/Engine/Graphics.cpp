@@ -105,8 +105,8 @@ namespace PE
         PrintErrors();
         assert(errors.size() == 0);
 
-        cam_position = Vec3(4, 4, 4);
-        cam_facing = Vec3(-1, -1, -1);
+        cam_position = Vec3( 0, 1, 24);
+        cam_facing = glm::normalize(Vec3(0, -0.1, -1));
     }
 
     void Graphics::Initialize()

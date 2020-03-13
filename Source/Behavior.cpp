@@ -100,8 +100,8 @@ BehaviorCohesion::BehaviorCohesion(const Boid * parent, float factor, float chec
 }
 
 BehaviorStayInArea::BehaviorStayInArea(const Boid * parent, float factor, float check_dist,
-                                       float minX, float maxX, float minY, float maxY) :
-        Behavior(parent, factor, sqrt(check_dist)), minX(minX), maxX(maxX), minY(minY), maxY(maxY)
+                                       PE::Vec3 min, PE::Vec3 max) :
+        Behavior(parent, factor, sqrt(check_dist)), min(min), max(max)
 {}
 
 void BehaviorStayInArea::PopulateTargets()
@@ -112,15 +112,13 @@ void BehaviorStayInArea::AssessTargets()
     bVector = PE::Vector();
     const PE::Point & pos = parent->GetPosition();
 
-    if (pos.x > maxX - check_dist_squared)
-        bVector += PE::Vector(-1, 0,0);
-    if (pos.x < minX + check_dist_squared)
-        bVector += PE::Vector(1, 0,0);
-
-    if (pos.y > maxY - check_dist_squared)
-        bVector += PE::Vector(0, -1,0);
-    if (pos.y < minY + check_dist_squared)
-        bVector += PE::Vector(0, 1,0);
+    for (int i = 0; i < 3; ++i)
+    {
+        if (pos[i] > max[i] - check_dist_squared)
+            bVector[i] -= 1;
+        if (pos[i] < min[i] + check_dist_squared)
+            bVector[i] += 1;
+    }
 }
 
 BehaviorStayOutArea::BehaviorStayOutArea(const Boid * parent, float factor, float check_dist, PE::Point position,
@@ -139,7 +137,9 @@ void BehaviorStayOutArea::AssessTargets()
     if (boidPos.x < position.x + size.x + check_dist_squared
         && boidPos.x > position.x - size.x - check_dist_squared
         && boidPos.y < position.y + size.y + check_dist_squared
-        && boidPos.y > position.y - size.y - check_dist_squared)
+        && boidPos.y > position.y - size.y - check_dist_squared
+        && boidPos.z < position.z + size.z + check_dist_squared
+        && boidPos.z > position.z - size.z - check_dist_squared)
     {
         bVector = boidPos - position;
         bVector = glm::normalize(bVector);

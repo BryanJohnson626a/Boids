@@ -9,21 +9,26 @@
 #include "Engine/Graphics.h"
 
 const int DEFAULT_NUM_BOIDS = 1000;
-const float RATIO = 0.9f;
+const float RATIO = 1.f;
 
 std::vector<Boid *> allBoids;
 std::vector<Boid *> boids1;
 std::vector<Boid *> boids2;
 
 std::vector<PE::Vertex> bverts{
-        PE::Vertex{PE::Vec3{1, 0, 0}, PE::Vec3{0, 0, 1}, PE::Vec2{0.5, 1}},
-        PE::Vertex{PE::Vec3{-1, -1, 0}, PE::Vec3{0, 0, 1}, PE::Vec2{0.5, 1}},
-        PE::Vertex{PE::Vec3{-0.5, 0, 0}, PE::Vec3{0, 0, 1}, PE::Vec2{0.5, 1}},
-        PE::Vertex{PE::Vec3{-1, 1, 0}, PE::Vec3{0, 0, 1}, PE::Vec2{0.5, 1}}
+        PE::Vertex{PE::Vec3{1, 0, 0}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
+        PE::Vertex{PE::Vec3{-1, -1, 0}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
+        PE::Vertex{PE::Vec3{-0.5, 0, -.5}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
+        PE::Vertex{PE::Vec3{-0.5, 0, .5}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
+        PE::Vertex{PE::Vec3{-1, 1, 0}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}}
 };
 std::vector<uint> bindices{
-        0, 1, 2,
-        0, 2, 3
+        1,0,3,
+        0,4,3,
+        1,3,2,
+        2,3,4,
+        1,2,0,
+        4,0,2
 };
 PE::TextureList btex;
 
@@ -74,6 +79,7 @@ void MakeBoidType2()
     b->Scale(1.25f);
     b->SetMaterial(PE::ruby);
     b->SetSpeed(0.75f);
+    PE::Graphics::GetInstance()->PE::Graphics::AddModel(b);
 }
 
 void GameInit(std::vector<std::string> cmd_args)
@@ -146,6 +152,27 @@ bool GameLoop(float dt)
 
                         for (int i = 0; i < std::ceil(10 * (1 - RATIO)); ++i)
                             MakeBoidType2();
+                        break;
+                    case SDLK_F1:
+                        PE::Graphics::GetInstance()->debug_mode = 1;
+                        break;
+                    case SDLK_F2:
+                        PE::Graphics::GetInstance()->debug_mode = 2;
+                        break;
+                    case SDLK_F3:
+                        PE::Graphics::GetInstance()->debug_mode = 3;
+                        break;
+                    case SDLK_F4:
+                        PE::Graphics::GetInstance()->debug_mode = 4;
+                        break;
+                    case SDLK_F5:
+                        PE::Graphics::GetInstance()->debug_mode = 5;
+                        break;
+                    case SDLK_F6:
+                        PE::Graphics::GetInstance()->debug_mode = 6;
+                        break;
+                    case SDLK_F10:
+                        PE::Graphics::GetInstance()->debug_mode = 0;
                         break;
                 }
                 break;

@@ -28,7 +28,7 @@ Boid::Boid(PE::Model & model) : Model(model)
     static DieReal VelDie(-1, 1);
 
     SetPosition(PE::Point(XDie.Roll(), YDie.Roll(), ZDie.Roll()));
-    SetScale(0.2f, 0.1f, 1);
+    SetScale(0.4f, 0.2f, 0.2f);
     velocity.x = VelDie.Roll();
     velocity.y = VelDie.Roll();
     velocity.z = VelDie.Roll();
@@ -56,7 +56,7 @@ void Boid::Update(float dt)
         force += behavior->GetVector();
 
     // Find largest vector for debug colors.
-    if (DEBUG_COLORS)
+    if (dynamic_color)
     {
         Behavior * largest = behaviors[0];
         for (auto b1 : behaviors)
@@ -91,7 +91,7 @@ void Boid::UpdateMove(float dt)
     {
         // Bounce at edges.
         for (int i = 0; i < 3; ++i)
-            if ((pos.x > BOUNDS[i] && new_velocity.x > 0) || (pos.x < -BOUNDS[i] && new_velocity.x < 0))
+            if ((pos[i] > BOUNDS[i] && new_velocity[i] > 0) || (pos[i] < -BOUNDS[i] && new_velocity[i] < 0))
                 new_velocity[i] *= -1;
 
     }
@@ -112,7 +112,7 @@ void Boid::UpdateMove(float dt)
     velocity = new_velocity;
     Move(velocity * dt);
 
-    SetRotation(glm::lookAt(pos, velocity, PE::Up));
+    SetRotation(glm::lookAt(pos, pos + velocity, PE::Up));
 
 
     // Ensure boids don't go too far out of bounds.
