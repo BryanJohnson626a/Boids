@@ -10,7 +10,10 @@ namespace PE
 
     struct Color
     {
-        float R{}, G{}, B{}, A{};
+        float R{};
+        float G{};
+        float A{};
+        float B{};
     };
 
     struct Material

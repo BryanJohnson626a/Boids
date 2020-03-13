@@ -55,6 +55,6 @@ namespace PE
 
         Material material;
 
-        GLuint VAO{}, VBO{}, EBO{};
+        GLuint VAO = 0, VBO = 0, EBO = 0;
     };
 }

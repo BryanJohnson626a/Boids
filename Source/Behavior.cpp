@@ -1,7 +1,9 @@
 
 #include "Behavior.h"
 #include "Boid.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/gtx/norm.hpp>
 
 Behavior::Behavior(const Boid * parent, float factor, float check_dist,
@@ -67,7 +69,7 @@ void BehaviorAlign::AssessTargets()
 
 BehaviorAlign::BehaviorAlign(const Boid * parent, float factor, float check_dist,
                              const Boids * targets) : Behavior(parent, factor, check_dist,
-                                                                                          targets)
+                                                               targets)
 {
 
 }
@@ -93,8 +95,8 @@ void BehaviorCohesion::AssessTargets()
 
 BehaviorCohesion::BehaviorCohesion(const Boid * parent, float factor, float check_dist,
                                    const Boids * targets) : Behavior(parent, factor,
-                                                                                                check_dist,
-                                                                                                targets)
+                                                                     check_dist,
+                                                                     targets)
 {
 
 }

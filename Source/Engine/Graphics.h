@@ -46,7 +46,7 @@ namespace PE
 
         Graphics();
         void Initialize();
-        void Deinit();
+        static void Deinit();
         ~Graphics();
 
         void Update(float dt);
@@ -72,18 +72,18 @@ namespace PE
         void WindowSetPosition(int x, int y);
 
         // Camera
-        Vec3 view_position;
-        Vec3 view_facing;
-        Vec3 cam_position;
-        Vec3 cam_facing;
+        Vec3 view_position{};
+        Vec3 view_facing{};
+        Vec3 cam_position{};
+        Vec3 cam_facing{};
 
         void SetView(Vec3 position, Vec3 facing);
         bool wtndc_needs_recalc{ true };
 
-        Mat4 projection;
-        Mat4 view;
+        Mat4 projection{};
+        Mat4 view{};
 
-        Shader * current_shader;
+        Shader * current_shader{};
         Shader globallight;
         Shader gbufferdebug;
         Shader phong_shading;
@@ -96,11 +96,11 @@ namespace PE
 
         static Graphics* instance;
 
-        void PreDraw();
+        static void PreDraw();
         void RenderObjects(GLuint target_framebuffer);
         void PostDraw();
 
-        void CompileShader(Shader & handle, std::string source_name);
+        static void CompileShader(Shader & handle, const std::string& source_name);
 
         void RecalcWTNDC();
 
@@ -108,10 +108,10 @@ namespace PE
         std::string title;
         int window_size_x;
         int window_size_y;
-        float aspect;
+        float aspect{};
         SDL_GLContext context;
 
-        GLuint FBOHandle;
+        GLuint FBOHandle{};
 
         // List of objects that need to be rendered.
         ROList level_objects;
@@ -119,6 +119,6 @@ namespace PE
 
         PrerenderFBO * gBuffer;
 
-        Mesh * FSQ;
+        Mesh * FSQ{};
     };
 }

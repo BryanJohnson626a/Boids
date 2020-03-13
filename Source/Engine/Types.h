@@ -5,6 +5,12 @@
 
 typedef unsigned int uint;
 
+#ifndef NDEBUG
+const bool DEBUG = true;
+#else
+const bool DEBUG = false;
+#endif
+
 namespace PE
 {
     using Mat4 = glm::mat4x4;

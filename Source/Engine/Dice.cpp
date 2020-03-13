@@ -6,8 +6,8 @@
 
 #include "Dice.h"
 
-RNG Die::generator(std::chrono::system_clock::now().time_since_epoch().count());
-RNG DieReal::generator(std::chrono::system_clock::now().time_since_epoch().count());
+RNG Die::generator(static_cast<unsigned long>(std::chrono::system_clock::now().time_since_epoch().count()));
+RNG DieReal::generator(static_cast<unsigned long>(std::chrono::system_clock::now().time_since_epoch().count()));
 
 Die::Die(unsigned high) : Die(1, static_cast<int>(high))
 {}

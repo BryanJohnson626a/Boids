@@ -1,6 +1,7 @@
 // Prototype code
 
 #include <vector>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "Boid.h"
 #include "Behavior.h"
@@ -8,36 +9,62 @@
 #include "Engine/Dice.h"
 #include "Engine/Graphics.h"
 
+#ifndef NDEBUG
+const int DEFAULT_NUM_BOIDS = 100;
+#else
 const int DEFAULT_NUM_BOIDS = 1000;
-const float RATIO = 1.f;
+#endif
+
+//const float RATIO = 0.75f;
+const float RATIO = 1;
 
 std::vector<Boid *> allBoids;
 std::vector<Boid *> boids1;
 std::vector<Boid *> boids2;
 
 std::vector<PE::Vertex> bverts{
-        PE::Vertex{PE::Vec3{1, 0, 0}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
-        PE::Vertex{PE::Vec3{-1, -1, 0}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
-        PE::Vertex{PE::Vec3{-0.5, 0, -.5}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
-        PE::Vertex{PE::Vec3{-0.5, 0, .5}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}},
-        PE::Vertex{PE::Vec3{-1, 1, 0}, PE::Vec3{0, 0, 0}, PE::Vec2{0, 0}}
+        PE::Vertex{PE::Vec3{-1, 0, 1}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, .5, .5}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, 0, -1}, PE::Vec3{}, PE::Vec2{}},
+
+        PE::Vertex{PE::Vec3{0, 0, -1}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, .5, .5}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{1, 0, 1}, PE::Vec3{}, PE::Vec2{}},
+
+        PE::Vertex{PE::Vec3{-1, 0, 1}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, -.5, .5}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, .5, .5}, PE::Vec3{}, PE::Vec2{}},
+
+        PE::Vertex{PE::Vec3{0, -.5, .5}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{1, 0, 1}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, .5, .5}, PE::Vec3{}, PE::Vec2{}},
+
+        PE::Vertex{PE::Vec3{-1, 0, 1}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, 0, -1}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, -.5, .5}, PE::Vec3{}, PE::Vec2{}},
+
+        PE::Vertex{PE::Vec3{1, 0, 1}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, -.5, .5}, PE::Vec3{}, PE::Vec2{}},
+        PE::Vertex{PE::Vec3{0, 0, -1}, PE::Vec3{}, PE::Vec2{}},
 };
+
 std::vector<uint> bindices{
-        1,0,3,
-        0,4,3,
-        1,3,2,
-        2,3,4,
-        1,2,0,
-        4,0,2
+        0, 1, 2,
+        3, 4, 5,
+        6, 7, 8,
+        9, 10, 11,
+        12, 13, 14,
+        15, 16, 17
 };
+
 PE::TextureList btex;
 
-static PE::Model * BoidModel;
+static PE::Model * BoidModel{nullptr};
 
 void MakeBoidType1()
 {
     static DieReal AvoidFac(0.25f, 0.5f);
-    static DieReal AvoidDis(0.25f, 1.5f);
+    static DieReal AvoidDis(1.25f, 1.5f);
     static DieReal AlignFac(1.f, 1.5f);
     static DieReal AlignDis(1.f, 1.5f);
     static DieReal CohesFac(0.5f, 1.5f);
@@ -46,16 +73,17 @@ void MakeBoidType1()
     static DieReal FearDis(2.2f, 3.3f);
 
     auto * b = new Boid(*BoidModel);
-    allBoids.push_back(b);
-    boids1.push_back(b);
+    allBoids.emplace_back(b);
+    boids1.emplace_back(b);
 
     b->AddBehavior(new BehaviorAvoid(b, AvoidFac.Roll(), AvoidDis.Roll(), &boids1));
     b->AddBehavior(new BehaviorAlign(b, AlignFac.Roll(), AlignDis.Roll(), &boids1));
     b->AddBehavior(new BehaviorCohesion(b, CohesFac.Roll(), CohesDis.Roll(), &boids1));
     b->AddBehavior(new BehaviorAvoid(b, FearFac.Roll(), FearDis.Roll(), &boids2));
+    b->AddBehavior(new BehaviorStayInArea(b, 1, 5, BOUNDS * -0.75f, BOUNDS * 0.75f));
 
-    b->Scale(0.75f);
-    b->SetMaterial(PE::pearl);
+    b->Scale(0.25f);
+    b->SetMaterial(PE::white_plastic);
     PE::Graphics::GetInstance()->PE::Graphics::AddModel(b);
 }
 
@@ -68,22 +96,32 @@ void MakeBoidType2()
     static DieReal CohesFac(0.5f, 1.5f);
     static DieReal CohesDis(2.5f, 3.5f);
 
-    Boid * b = new Boid(*BoidModel);
-    allBoids.push_back(b);
-    boids2.push_back(b);
+    auto * b = new Boid(*BoidModel);
+    allBoids.emplace_back(b);
+    boids2.emplace_back(b);
 
     b->AddBehavior(new BehaviorAvoid(b, AvoidFac.Roll(), AvoidDis.Roll(), &boids2));
     b->AddBehavior(new BehaviorAlign(b, AlignFac.Roll(), AlignDis.Roll(), &boids1));
     b->AddBehavior(new BehaviorCohesion(b, CohesFac.Roll(), CohesDis.Roll(), &boids1));
+    b->AddBehavior(new BehaviorStayInArea(b, 1, 5, BOUNDS * -0.75f, BOUNDS * 0.75f));
 
-    b->Scale(1.25f);
-    b->SetMaterial(PE::ruby);
+    b->Scale(0.5f);
+    b->SetMaterial(PE::green_plastic);
     b->SetSpeed(0.75f);
     PE::Graphics::GetInstance()->PE::Graphics::AddModel(b);
 }
 
 void GameInit(std::vector<std::string> cmd_args)
 {
+    for (int i = 0; i < bverts.size(); i += 3)
+    {
+        PE::Vec3 normal = glm::cross(bverts[i + 1].Position - bverts[i].Position,
+                                     bverts[i + 2].Position - bverts[i].Position);
+        bverts[i].Normal = normal;
+        bverts[i + 1].Normal = normal;
+        bverts[i + 2].Normal = normal;
+    }
+
     PE::Mesh BoidMesh = PE::Mesh(bverts, bindices, btex);
     BoidModel = new PE::Model(BoidMesh);
 
@@ -92,8 +130,8 @@ void GameInit(std::vector<std::string> cmd_args)
     if (cmd_args.size() == 2)
     {
         int total = std::stoi(cmd_args[1]);
-        num_boid1 = std::floor((float) total * RATIO);
-        num_boid2 = std::ceil((float) total * (1 - RATIO));
+        num_boid1 = static_cast<int>(std::floor((float) total * RATIO));
+        num_boid2 = static_cast<int>(std::ceil((float) total * (1 - RATIO)));
     }
     else if (cmd_args.size() == 3)
     {
@@ -102,13 +140,17 @@ void GameInit(std::vector<std::string> cmd_args)
     }
     else
     {
-        num_boid1 = std::floor(DEFAULT_NUM_BOIDS * RATIO);
-        num_boid2 = std::ceil(DEFAULT_NUM_BOIDS * (1 - RATIO));
+        num_boid1 = static_cast<int>(std::floor(DEFAULT_NUM_BOIDS * RATIO));
+        num_boid2 = static_cast<int>(std::ceil(DEFAULT_NUM_BOIDS * (1 - RATIO)));
     }
 
+    allBoids.reserve(num_boid1 + num_boid2);
+
+    boids1.reserve(num_boid1);
     for (int i = 0; i < num_boid1; ++i)
         MakeBoidType1();
 
+    boids1.reserve(num_boid2);
     for (int i = 0; i < num_boid2; ++i)
         MakeBoidType2();
 }
@@ -174,10 +216,14 @@ bool GameLoop(float dt)
                     case SDLK_F10:
                         PE::Graphics::GetInstance()->debug_mode = 0;
                         break;
+                    default:
+                        break;
                 }
                 break;
             case SDL_QUIT:
                 return false;
+            default:
+                break;
         }
     }
 

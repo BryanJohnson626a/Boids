@@ -5,13 +5,12 @@
 */
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 #include <algorithm>
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>
-#include <sstream>
 
 #include "Types.h"
 #include "Graphics.h"
@@ -58,7 +57,7 @@ namespace PE
 
     void Graphics::PrintErrors()
     {
-        for (auto er : errors)
+        for (const auto& er : errors)
             std::cout << er << std::endl;
     }
 
@@ -103,10 +102,10 @@ namespace PE
         // Ensure no errors.
         LogError(__FILE__, __LINE__);
         PrintErrors();
-        assert(errors.size() == 0);
+        assert(errors.empty());
 
-        cam_position = Vec3( 0, 1, 24);
-        cam_facing = glm::normalize(Vec3(0, -0.1, -1));
+        cam_position = Vec3( 24, 24, 24);
+        cam_facing = glm::normalize(Vec3(-1, -1, -1));
     }
 
     void Graphics::Initialize()
@@ -114,7 +113,7 @@ namespace PE
         // Ensure no errors.
         LogError(__FILE__, __LINE__);
         PrintErrors();
-        assert(errors.size() == 0);
+        assert(errors.empty());
 
         instance = this;
 
@@ -174,14 +173,14 @@ namespace PE
         // Ensure no errors.
         LogError(__FILE__, __LINE__);
         PrintErrors();
-        assert(errors.size() == 0);
+        assert(errors.empty());
     }
 
     void Graphics::Deinit()
     {
         // Ensure no errors.
         LogError(__FILE__, __LINE__);
-        assert(errors.size() == 0);
+        assert(errors.empty());
     }
 
     Graphics::~Graphics()
@@ -197,7 +196,7 @@ namespace PE
         SDL_Quit();
     }
 
-    void Graphics::CompileShader(Shader & handle, std::string source_name)
+    void Graphics::CompileShader(Shader & handle, const std::string& source_name)
     {
         // Load shader source files
         std::ifstream frag_source("../Resources/Shaders/" + source_name + ".frag");
@@ -217,7 +216,7 @@ namespace PE
         // Compile fragment shader.
         GLint value;
         GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fshader, 1, &frag_ptr, 0);
+        glShaderSource(fshader, 1, &frag_ptr, nullptr);
         glCompileShader(fshader);
         glGetShaderiv(fshader, GL_COMPILE_STATUS, &value);
         if (value)
@@ -232,7 +231,7 @@ namespace PE
 
         // Compile vertex shader.
         GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vshader, 1, &vert_ptr, 0);
+        glShaderSource(vshader, 1, &vert_ptr, nullptr);
         glCompileShader(vshader);
         glGetShaderiv(vshader, GL_COMPILE_STATUS, &value);
         if (value)
@@ -283,7 +282,7 @@ namespace PE
 
         // Ensure no errors.
         LogError(__FILE__, __LINE__);
-        if (errors.size())
+        if (!errors.empty())
         {
             std::cout << "Encountered error when compiling " << source_name << ". Shader compilation aborted."
                       << std::endl;

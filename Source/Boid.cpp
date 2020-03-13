@@ -9,12 +9,12 @@
 
 #include <glm/gtx/vector_angle.hpp>
 
-// 1 bounce, 2 wrap.
-int Boid::edge_mode = 1;
-
 bool Boid::dynamic_color = true;
 
 float Boid::velocity_factor = 1;
+
+static const float POP_TIME = 0.2f;
+
 
 const float VEL_MAX = 1000000;
 const bool DEBUG_COLORS = false;
@@ -25,48 +25,56 @@ Boid::Boid(PE::Model & model) : Model(model)
     static DieReal XDie(-BOUNDS.x, BOUNDS.x);
     static DieReal YDie(-BOUNDS.y, BOUNDS.y);
     static DieReal ZDie(-BOUNDS.z, BOUNDS.z);
-    static DieReal VelDie(-1, 1);
+    static DieReal VelDie(-1.f, 1.f);
 
     SetPosition(PE::Point(XDie.Roll(), YDie.Roll(), ZDie.Roll()));
-    SetScale(0.4f, 0.2f, 0.2f);
     velocity.x = VelDie.Roll();
     velocity.y = VelDie.Roll();
     velocity.z = VelDie.Roll();
     velocity = glm::normalize(velocity);
+
+    static DieReal PopDie(0.f, POP_TIME);
+    popTimer = PopDie.Roll();
 }
 
 void Boid::Update(float dt)
 {
-    static DieReal PopDie(0.1f, 0.15f);
     popTimer -= dt;
     if (popTimer < 0)
     {
         for (auto behavior : behaviors)
             behavior->PopulateTargets();
-        popTimer += PopDie.Roll();
+        popTimer += POP_TIME;
     }
 
     for (auto behavior : behaviors)
         behavior->AssessTargets();
 
-
     // Apply forces from behaviors.
-    PE::Vector force;
-    for (auto behavior : behaviors)
+    PE::Vector force{};
+    for (const auto & behavior : behaviors)
         force += behavior->GetVector();
 
     // Find largest vector for debug colors.
     if (dynamic_color)
     {
-        Behavior * largest = behaviors[0];
-        for (auto b1 : behaviors)
-            if (b1->GetVector().length() > largest->GetVector().length())
-                largest = b1;
-        SetMaterial(largest->GetDebugColor());
+        Behavior * largest = nullptr;
+        float largest_force = 0.1;
+        for (auto & bh : behaviors)
+            if (glm::length(bh->GetVector()) > largest_force)
+            {
+                largest = bh;
+                largest_force = glm::length(bh->GetVector());
+            }
+
+        if (largest)
+            SetMaterial(largest->GetDebugColor());
+        else
+            SetMaterial(PE::white_plastic);
     }
 
     // If force is zero, no change in velocity.
-    if (force == PE::Vec3{})
+    if (force.x == 0 && force.y == 0 && force.z == 0)
     {
         new_velocity = velocity;
         return;
@@ -87,40 +95,32 @@ void Boid::UpdateMove(float dt)
 {
     PE::Point pos = GetPosition();
 
-    if (edge_mode == 1)
-    {
-        // Bounce at edges.
-        for (int i = 0; i < 3; ++i)
-            if ((pos[i] > BOUNDS[i] && new_velocity[i] > 0) || (pos[i] < -BOUNDS[i] && new_velocity[i] < 0))
-                new_velocity[i] *= -1;
-
-    }
-    else if (edge_mode == 2)
-    {
-        // Wrap at edges.
-        for (int i = 0; i < 3; ++i)
-        {
-            if (pos[i] > BOUNDS[i])
-                pos[i] -= 2 * BOUNDS[i];
-            else if (pos[i] < -BOUNDS[i])
-                pos[i] += 2 * BOUNDS[i];
-        }
-
-        SetPosition(pos);
-    }
+    // Bounce at edges.
+    for (int i = 0; i < 3; ++i)
+        if ((pos[i] > BOUNDS[i] && new_velocity[i] > 0) || (pos[i] < -BOUNDS[i] && new_velocity[i] < 0))
+            new_velocity[i] *= -1;
 
     velocity = new_velocity;
     Move(velocity * dt);
 
-    SetRotation(glm::lookAt(pos, pos + velocity, PE::Up));
+    // Rotate boid to face velocity vector.
+    SetRotation(glm::transpose(glm::lookAt(PE::Vec3{}, velocity, glm::normalize(pos))));
 
-
-    // Ensure boids don't go too far out of bounds.
-    if (FORCE_BOUND && (GetPosition().x > BOUNDS.x * 1.1f || GetPosition().x < -BOUNDS.x * 1.1f ||
-                        GetPosition().y > BOUNDS.y * 1.1f || GetPosition().y < -BOUNDS.y * 1.1f||
-                        GetPosition().z > BOUNDS.z * 1.1f || GetPosition().z < -BOUNDS.z * 1.1f))
+    if (DEBUG)
     {
-        std::cout << "Boid OOB.\n";
-        SetPosition(PE::Point(0, 0, 0));
+        // Ensure boids don't go too far out of bounds.
+        if (GetPosition().x > BOUNDS.x * 1.1f || GetPosition().x < -BOUNDS.x * 1.1f ||
+            GetPosition().y > BOUNDS.y * 1.1f || GetPosition().y < -BOUNDS.y * 1.1f ||
+            GetPosition().z > BOUNDS.z * 1.1f || GetPosition().z < -BOUNDS.z * 1.1f)
+        {
+            std::cout << "Boid OOB.\n";
+            SetPosition(PE::Point(0, 0, 0));
+        }
     }
+}
+
+Boid::~Boid()
+{
+    for (auto * b : behaviors)
+        delete b;
 }

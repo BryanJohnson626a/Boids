@@ -40,24 +40,25 @@ namespace PE
 
         // Relative operations:
 
-        Transformable & Scale(float r);
-        Transformable & Scale(float x, float y, float z);
+        void Scale(float r);
+        void Scale(float x, float y, float z);
 
-        Transformable & Move(float x, float y, float z);
-        Transformable & Move(Vec3 translation);
+        void Move(float x, float y, float z);
+        void Move(Vec3 translation);
 
-        Transformable & Rotate(const Vec3 & axis, Radian angle);
-        Transformable & SetRotation(const Mat3 & axes);
-        Transformable & ResetRotation();
+        void Rotate(const Vec3 & axis, Radian angle);
+        void SetRotationAxes(const Mat3 & axes);
+        void SetRotation(const Mat4 & rotation_matrix);
+        void ResetRotation();
 
         // Absolute operations:
 
-        Transformable & SetScale(float r);
-        Transformable & SetScale(Vec3 new_scale);
-        Transformable & SetScale(float x, float y, float z);
+        void SetScale(float r);
+        void SetScale(Vec3 new_scale);
+        void SetScale(float x, float y, float z);
 
-        Transformable & SetPosition(float x, float y, float z);
-        Transformable & SetPosition(Vec3 p);
+        void SetPosition(float x, float y, float z);
+        void SetPosition(Vec3 p);
 
         virtual Mat4 GetTransform();
         virtual const Mat4 & GetTransformLocal();

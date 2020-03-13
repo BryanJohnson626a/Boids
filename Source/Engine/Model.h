@@ -43,7 +43,7 @@ namespace PE
         void LoadAllModels(std::string_view directory);
         void LoadModel(std::string_view path);
         void ProcessNode(aiNode * node, const aiScene * scene);
-        Mesh ProcessMesh(aiMesh * mesh, const aiScene * scene);
+        static Mesh ProcessMesh(aiMesh * mesh, const aiScene * scene);
 
         std::vector<Mesh> meshes;
     };

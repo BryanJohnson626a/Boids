@@ -296,6 +296,5 @@ namespace PE
     }
 
     Model::~Model()
-    {
-    }
+    = default;
 }

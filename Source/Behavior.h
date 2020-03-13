@@ -17,6 +17,8 @@ public:
     Behavior(const Boid * parent, float factor, float check_dist,
              const Boids * targets = nullptr);
 
+    virtual ~Behavior() = default;
+
     // Set how far away a behavior can "see".
     void SetCheckDistance(float dist)
     { check_dist_squared = dist * dist; };
@@ -28,22 +30,21 @@ public:
     virtual void AssessTargets() = 0;
 
     // Gets the current vector that represents the behavior.
-    PE::Vector GetVector() const;
+    [[nodiscard]] PE::Vector GetVector() const;
 
-    virtual const PE::Material & GetDebugColor() const
-    { return PE::pearl; };
+    [[nodiscard]] virtual const PE::Material & GetDebugColor() const = 0;
 protected:
 
-    float check_dist_squared;
-    float factor;
+    float check_dist_squared = 0;
+    float factor = 0;
 
     // A pointer to the list of objects this behavior is concerned with.
-    const Boids * targets;
-    const Boid * parent;
+    const Boids * targets{nullptr};
+    const Boid * parent{nullptr};
 
-    cBoids cur_targets;
+    cBoids cur_targets{};
 
-    PE::Vector bVector;
+    PE::Vector bVector{};
 };
 
 class BehaviorAvoid : public Behavior
@@ -55,7 +56,7 @@ public:
     void AssessTargets() override;
 
     [[nodiscard]] const PE::Material & GetDebugColor() const override
-    { return PE::ruby; };
+    { return PE::red_plastic; };
 };
 
 class BehaviorAlign : public Behavior
@@ -66,8 +67,8 @@ public:
     void PopulateTargets() override;
     void AssessTargets() override;
 
-    const PE::Material & GetDebugColor() const override
-    { return PE::emerald; };
+    [[nodiscard]] const PE::Material & GetDebugColor() const override
+    { return PE::cyan_plastic; };
 };
 
 class BehaviorCohesion : public Behavior
@@ -79,7 +80,7 @@ public:
     void AssessTargets() override;
 
     [[nodiscard]] const PE::Material & GetDebugColor() const override
-    { return PE::turquoise; };
+    { return PE::green_plastic; };
 };
 
 class BehaviorStayInArea : public Behavior
@@ -91,7 +92,7 @@ public:
     void AssessTargets() override;
 
     [[nodiscard]] const PE::Material & GetDebugColor() const override
-    { return PE::ruby; };
+    { return PE::yellow_plastic; };
 private:
     PE::Vec3 min, max;
 };
@@ -99,12 +100,14 @@ private:
 class BehaviorStayOutArea : public Behavior
 {
 public:
-    BehaviorStayOutArea(const Boid * parent, float factor, float check_dist, PE::Point position, PE::Vector size);
+    BehaviorStayOutArea(const Boid * parent, float factor, float check_dist,
+                        PE::Point position, PE::Vector size);
+
     void PopulateTargets() override;
     void AssessTargets() override;
 
     [[nodiscard]] const PE::Material & GetDebugColor() const override
-    { return PE::brass; };
+    { return PE::yellow_plastic; };
 private:
     PE::Point position;
     PE::Vector size;

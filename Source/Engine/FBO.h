@@ -10,28 +10,28 @@ namespace PE
     class FBO
     {
     public:
-        virtual void Create(const int width, const int height) = 0;
+        virtual void Create(int width, int height) = 0;
         void Bind();
-        void Unbind();
+        static void Unbind();
 
-        unsigned int fboID;
-        unsigned int textureID;
-        int width, height;  // Size of the texture.
+        unsigned int fboID{};
+        unsigned int textureID{};
+        int width{}, height{};  // Size of the texture.
     };
 
     class PrerenderFBO : public FBO
     {
     public:
-        void Create(const int width, const int height) override;
+        void Create(int width, int height) override;
 
-        unsigned int gPosition, gNormal, gDiffuse, gSpecular, gDepth;
+        unsigned int gPosition{}, gNormal{}, gDiffuse{}, gSpecular{}, gDepth{};
     };
 
     class ShadowFBO : public FBO
     {
     public:
-        void Create(const int width, const int height) override;
+        void Create(int width, int height) override;
 
-        unsigned int gDepth, gShadow;
+        unsigned int gDepth{}, gShadow{};
     };
 }

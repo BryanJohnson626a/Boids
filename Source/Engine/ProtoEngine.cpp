@@ -3,7 +3,6 @@
 
 #include <chrono>
 #include <thread>
-#include <iostream>
 
 #include "Graphics.h"
 #include "../GameLoop.h"
@@ -16,7 +15,7 @@ typedef std::chrono::duration<int, std::milli> millisecs_t;
 int main(int args, char * argv[])
 {
     std::vector<std::string> cmd_args;
-    cmd_args.reserve(args);
+    cmd_args.reserve(static_cast<unsigned long>(args));
     for (int i = 0; i < args; ++i)
         cmd_args.emplace_back(argv[i]);
 
@@ -25,7 +24,7 @@ int main(int args, char * argv[])
     bool running = true;
     std::chrono::steady_clock::time_point prev_time = std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point cur_time;
-    float dt;
+    float dt = 0;
 
     GameInit(cmd_args);
 
