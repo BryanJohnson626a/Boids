@@ -25,15 +25,15 @@ namespace PE
         static TextureList loaded_textures;
     public:
         // Use to create a single-mesh model.
-        explicit Model(const Mesh & mesh);
+        explicit Model(std::vector<PE::Mesh>  meshes);
         explicit Model(std::string_view path);
         ~Model() override;
 
-        void DrawDebug(Shader * shader, const Mat4 & projection,
+        virtual void DrawDebug(Shader * shader, const Mat4 & projection,
                        const Color * color);
-        void DrawDebugLines(Shader * shader, const Mat4 & projection,
+        virtual void DrawDebugLines(Shader * shader, const Mat4 & projection,
                             const Color * color);
-        void DrawDeferred(const Shader * shader, const Mat4 & projection,
+        virtual void DrawDeferred(const Shader * shader, const Mat4 & projection,
                           const Vec3 & cam_position);
         void SetMaterial(Material new_material);
         void SetRandomMaterials();

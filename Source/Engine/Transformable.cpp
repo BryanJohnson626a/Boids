@@ -53,7 +53,7 @@ namespace PE
 
     void Transformable::ResetRotation()
     {
-      rotation = Mat4{1};
+      rotation = Mat4(1.f);
       recalc_needed = true;
     }
 

@@ -7,7 +7,7 @@
 #include "Graphics.h"
 #include "../GameLoop.h"
 
-const int FPS_TARGET = 30;
+const int FPS_TARGET = 60;
 const int FRAME_MS = 1000 / FPS_TARGET;
 
 typedef std::chrono::duration<int, std::milli> millisecs_t;

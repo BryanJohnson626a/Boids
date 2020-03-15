@@ -6,6 +6,4 @@
 
 #include <vector>
 
-class Boid;
-using Boids = std::vector<Boid *>;
-using cBoids = std::vector<const Boid *>;
+class BoidController;

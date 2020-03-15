@@ -23,7 +23,8 @@ namespace PE
             vertices(std::move(vertices)),
             indices(std::move(indices)),
             textures(std::move(textures))
-    {}
+    {
+    }
 
     // Generates GPU buffers.
     void Mesh::GenerateBuffers()

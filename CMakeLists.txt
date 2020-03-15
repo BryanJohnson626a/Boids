@@ -24,10 +24,8 @@ find_package(Assimp CONFIG REQUIRED)
 find_package(soil CONFIG REQUIRED)
 
 set(PROJECT_SOURCE_FILES
-        Source/Behavior.cpp
-        Source/Behavior.h
-        Source/Boid.cpp
-        Source/Boid.h
+        Source/Boids.cpp
+        Source/Boids.h
         Source/GameLoop.cpp
         Source/GameLoop.h
         Source/Engine/ProtoEngine.cpp

@@ -1,6 +1,5 @@
 #version 430 core
 
-uniform vec3 view_position;
 uniform vec3 diffuse;
 uniform vec3 specular;
 uniform float shininess;

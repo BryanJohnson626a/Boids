@@ -7,15 +7,16 @@
 #include <iostream>
 #include <filesystem>
 #include <glm/gtc/type_ptr.hpp>
+#include <utility>
 
 namespace PE
 {
     TextureList Model::loaded_textures;
 
-    Model::Model(const Mesh & mesh)
+    Model::Model(std::vector<PE::Mesh> meshes_in) : meshes(std::move(meshes_in))
     {
-        meshes.emplace_back(mesh);
-        meshes.back().GenerateBuffers();
+        for (auto & mesh : meshes)
+            mesh.GenerateBuffers();
     }
 
     static Vec3 MAX, MIN;
@@ -36,6 +37,15 @@ namespace PE
         {
             for (Vertex & v : m.vertices)
                 v.Position = (v.Position - offset) * max_scale;
+
+            //for (int i = 0; i < m.vertices.size(); i += 3)
+            //{
+            //    PE::Vec3 normal = glm::cross(m.vertices[i + 1].Position - m.vertices[i].Position,
+            //                                 m.vertices[i + 2].Position - m.vertices[i].Position);
+            //    m.vertices[i].Normal = normal;
+            //    m.vertices[i + 1].Normal = normal;
+            //    m.vertices[i + 2].Normal = normal;
+            //}
 
             m.GenerateBuffers();
         }
@@ -269,7 +279,6 @@ namespace PE
         Mat4 transform_final = projection * GetTransform();
         glUniformMatrix4fv(shader->uTransform, 1, GL_FALSE, glm::value_ptr(transform_final));
         glUniformMatrix4fv(shader->uModelTransform, 1, GL_FALSE, glm::value_ptr(GetTransform()));
-        glUniform3fv(shader->uViewPosition, 1, glm::value_ptr(cam_position));
         Graphics::LogError(__FILE__, __LINE__);
 
         for (const Mesh & mesh : meshes)

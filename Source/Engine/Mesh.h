@@ -49,12 +49,10 @@ namespace PE
         std::vector<Vertex> vertices;
         std::vector<uint> indices;
         TextureList textures;
+        Material material;
+        GLuint VAO = 0, VBO = 0, EBO = 0;
         void GenerateBuffers();
     protected:
         void ClearBuffers();
-
-        Material material;
-
-        GLuint VAO = 0, VBO = 0, EBO = 0;
     };
 }

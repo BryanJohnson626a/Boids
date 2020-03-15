@@ -3,7 +3,6 @@
 
 uniform mat4 transform;
 uniform mat4 model_transform;
-uniform vec3 view_position;
 
 // Input vertex data, different for all executions of this shader.
 layout(location = 0) in vec3 position;
