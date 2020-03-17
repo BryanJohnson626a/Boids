@@ -21,7 +21,7 @@ void BoidController::AddBoids(uint num)
         Boids.emplace_back(MakeBoid());
 
     updates_per_frame = Boids.size() / 2;
-    populates_per_frame = Boids.size() / 20;
+    populates_per_frame = Boids.size() / 120;
 }
 
 void BoidController::RemoveBoids(uint num)
@@ -47,7 +47,7 @@ void BoidController::Update(float dt)
     for (int i = 0; i < updates_per_frame; ++i)
     {
         updates_counter = (updates_counter + 1) % Boids.size();
-        UpdateBoid(Boids[updates_counter], dt);
+        UpdateForce(Boids[updates_counter], dt);
     }
 
     for (auto & b : Boids)
@@ -63,24 +63,27 @@ bool BoidController::InRange(const Boid & A, const Boid & B)
 void BoidController::PopulateNeighbors(Boid & boid)
 {
     boid.neighbors.clear();
-    for (const auto & other : Boids)
-        if (InRange(boid, other))
-            boid.neighbors.emplace_back(&other);
+    for (int i = 0; i < Boids.size(); ++i)
+        if (InRange(boid, Boids[i]))
+            boid.neighbors.emplace_back(i);
 }
 
 void BoidController::MoveBoid(Boid & boid, float dt)
 {
-    // Switch velocity to the newly calculated velocity, and update position.
-    boid.velocity = boid.new_velocity;
+    // Add the force to shift the direction of the velocity toward where the boid
+    // wants to go, then scale that velocity to move speed.
+    boid.velocity += boid.force * turnForce * dt;
+    boid.velocity = glm::normalize(boid.velocity) * boid.speed;
+
+    // Update position.
     boid.position += boid.velocity * dt;
 
     PE::Mat4 rotation = glm::transpose(glm::lookAt(PE::Vec3{}, boid.velocity, glm::normalize(boid.position)));
-    rotation[3][3] = 1;
 
     // Update boid transform to new position and heading.
     boid.transform = glm::translate(PE::Mat4(1.f), boid.position) *
-            rotation *
-            PE::Mat4(1.f);
+                     rotation *
+                     PE::Mat4(1.f);
 }
 
 PE::Vector RandomVec()
@@ -95,60 +98,36 @@ BoidController::Boid BoidController::MakeBoid()
     static DieReal XDie(-BOUNDS.x * 0.75f, BOUNDS.x * 0.75f);
     static DieReal YDie(-BOUNDS.y * 0.75f, BOUNDS.y * 0.75f);
     static DieReal ZDie(-BOUNDS.z * 0.75f, BOUNDS.z * 0.75f);
+    static DieReal SpeedDie(1, 2);
 
     // Create boid with random location and velocity.
     Boid NewBoid;
     NewBoid.position = PE::Vector{XDie.Roll(), YDie.Roll(), ZDie.Roll()};
     NewBoid.velocity = RandomVec();
     NewBoid.velocity = glm::normalize(NewBoid.velocity);
+    NewBoid.speed = SpeedDie.Roll();
     return NewBoid;
 }
 
-void BoidController::UpdateBoid(BoidController::Boid & boid, float dt)
+void BoidController::UpdateForce(BoidController::Boid & boid, float dt)
 {
-    PE::Vector force;
+    boid.force = PE::Vec3{0};
+    PE::Vec3 avoid_force{}, align_force{}, cohesion_force{}, wander_force{};
     if (!boid.neighbors.empty())
     {
         // Get forces from behaviors.
-        auto avoid_force = AvoidVector(boid) * AvoidFactor;
-        auto align_force = AlignVector(boid) * AlignFactor;
-        auto cohesion_force = CohesionVector(boid) * CohesionFactor;
-        auto area_force = AreaVector(boid) * AreaFactor;
-
-        force = avoid_force + align_force + cohesion_force + area_force;
+        boid.force += avoid_force = AvoidVector(boid) * AvoidFactor;
+        boid.force += align_force = AlignVector(boid) * AlignFactor;
+        boid.force += cohesion_force = CohesionVector(boid) * CohesionFactor;
     }
-    else
-    {
-        // Wander
-        force = RandomVec() * 0.1f;
-    }
+    PE::Vec3 area_force = AreaVector(boid) * AreaFactor;
+    boid.force += area_force;
 
-
-
-    // If force is zero, no change in velocity.
-    if (force == PE::Vector{0})
-    {
-        boid.new_velocity = boid.velocity;
+    // Can't normalize a 0 vector and velocity isn't changing so just stop.
+    if (boid.force == PE::Vec3{0})
         return;
-    }
 
-    // To maintain consistent turning speed, normalize the force and apply turn factor and DT mod.
-    force = glm::normalize(force);
-    force *= turnForce * dt;
-
-    // New velocity still has the old velocity in it. We add the force to shift the direction of
-    // the velocity toward where the boid wants to go, then scale that velocity to move speed.
-    boid.new_velocity += force;
-    boid.new_velocity = glm::normalize(boid.new_velocity) * speed;
-
-
-    // Bounce at edges.
-    for (int i = 0; i < 3; ++i)
-        if ((boid.position[i] > BOUNDS[i] && boid.new_velocity[i] > 0) ||
-            (boid.position[i] < -BOUNDS[i] && boid.new_velocity[i] < 0))
-        {
-            boid.new_velocity[i] *= -1;
-        }
+    boid.force = glm::normalize(boid.force);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -158,11 +137,11 @@ PE::Vector BoidController::AvoidVector(const Boid & boid) const
 {
     PE::Vector bVector{};
 
-    for (const auto * b : boid.neighbors)
+    for (auto i : boid.neighbors)
     {
-        float dist = glm::distance2(b->position, boid.position);
+        float dist = glm::distance2(Boids[i].position, boid.position);
         if (dist != 0.f)
-            bVector += (boid.position - b->position) / dist;
+            bVector += (boid.position - Boids[i].position) / dist;
     }
     return bVector;
 }
@@ -171,8 +150,8 @@ PE::Vector BoidController::AlignVector(const Boid & boid) const
 {
     PE::Vector bVector{};
 
-    for (const auto * b : boid.neighbors)
-        bVector += b->velocity;
+    for (auto i : boid.neighbors)
+        bVector += Boids[i].velocity;
 
     bVector = glm::normalize(bVector);
 
@@ -183,8 +162,8 @@ PE::Vector BoidController::CohesionVector(const Boid & boid) const
 {
     PE::Vector bVector{};
 
-    for (const auto * b : boid.neighbors)
-        bVector += b->position - boid.position;
+    for (auto i : boid.neighbors)
+        bVector += Boids[i].position - boid.position;
 
     bVector = glm::normalize(bVector);
     return bVector;
@@ -192,15 +171,8 @@ PE::Vector BoidController::CohesionVector(const Boid & boid) const
 
 PE::Vector BoidController::AreaVector(const Boid & boid) const
 {
-    PE::Vector bVector{};
-    for (int i = 0; i < 3; ++i)
-    {
-        if (boid.position[i] > AreaMax[i] - check_dist_squared)
-            bVector[i] -= 1;
-        if (boid.position[i] < AreaMin[i] + check_dist_squared)
-            bVector[i] += 1;
-    }
-    return bVector;
+    // Gently nudge boids in if they get too far
+    return -boid.position * std::max((glm::length(boid.position) - AreaSize), 0.0f);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -271,7 +243,8 @@ void BoidController::DrawDeferred(const PE::Shader * shader, const PE::Mat4 & pr
         // Draw each boid.
         for (const Boid & boid : Boids)
         {
-            glUniformMatrix4fv(shader->uTransform, 1, GL_FALSE, glm::value_ptr(transform_final * boid.transform * glm::scale(BoidScale)));
+            glUniformMatrix4fv(shader->uTransform, 1, GL_FALSE,
+                               glm::value_ptr(transform_final * boid.transform * glm::scale(BoidScale)));
             glUniformMatrix4fv(shader->uModelTransform, 1, GL_FALSE,
                                glm::value_ptr(model_transform * boid.transform * glm::scale(BoidScale)));
             glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr);

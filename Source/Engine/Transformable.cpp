@@ -35,7 +35,7 @@ namespace PE
 
     void Transformable::Rotate(const Vec3 & axis, Radian angle)
     {
-      rotation = glm::rotate(rotation, angle, glm::vec3(axis.x, axis.y, axis.z));
+      rotation = glm::rotate(rotation, angle, axis);
       recalc_needed = true;
     }
 

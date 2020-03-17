@@ -33,19 +33,17 @@ namespace PE
         Vec3 scale = 2.f / (MAX - MIN);
         float max_scale = std::max(scale.x, std::max(scale.y, scale.z));
 
+        Mat4 rotation = glm::rotate(Mat4{1}, glm::pi<float>(), West);
+        //rotation = rotation * glm::rotate(Mat4{1}, -glm::pi<float>()/2, North);
+
         for (Mesh & m : meshes)
         {
             for (Vertex & v : m.vertices)
+            {
                 v.Position = (v.Position - offset) * max_scale;
-
-            //for (int i = 0; i < m.vertices.size(); i += 3)
-            //{
-            //    PE::Vec3 normal = glm::cross(m.vertices[i + 1].Position - m.vertices[i].Position,
-            //                                 m.vertices[i + 2].Position - m.vertices[i].Position);
-            //    m.vertices[i].Normal = normal;
-            //    m.vertices[i + 1].Normal = normal;
-            //    m.vertices[i + 2].Normal = normal;
-            //}
+                v.Position = rotation * Vec4(v.Position.x, v.Position.y, v.Position.z, 1);
+                v.Normal = rotation * Vec4(v.Normal.x, v.Normal.y, v.Normal.z, 0);
+            }
 
             m.GenerateBuffers();
         }

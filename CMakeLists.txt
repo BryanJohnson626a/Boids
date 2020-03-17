@@ -65,3 +65,6 @@ target_link_libraries(Boids PRIVATE
 add_custom_command(TARGET Boids POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_SOURCE_DIR}/Resources ${CMAKE_BINARY_DIR}/Resources DEPENDS ${CMAKE_BINARY_DIR}/Resources
         COMMENT "Creating Resource folder symlink ${CMAKE_SOURCE_DIR}/Resources -> ${CMAKE_BINARY_DIR}/Resources")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")

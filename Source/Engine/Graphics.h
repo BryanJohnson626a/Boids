@@ -91,6 +91,7 @@ namespace PE
 
         // Mode for displaying debug info. 0 = no debug info.
         int debug_mode = 0;
+        void CompileShaders();
     private:
 
 

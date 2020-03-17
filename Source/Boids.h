@@ -6,17 +6,24 @@
 #include "Engine/Transformable.h"
 #include "Engine/Model.h"
 
+#ifndef NDEBUG
+const PE::Vec3 BOUNDS{15.f, 15.f, 15.f};
+#else
 const PE::Vec3 BOUNDS{30.f, 30.f, 30.f};
+#endif
 
 class BoidController : public PE::Model
 {
     struct Boid
     {
-        PE::Vector position;
+        PE::Vector position{};
         PE::Vector velocity{};
-        PE::Vector new_velocity{};
-        std::vector<const Boid *> neighbors;
-        glm::mat4 transform;
+        PE::Vector force{};
+        // Store neighbors by index to avoid
+        // pointer invalidation when adding boids.
+        std::vector<uint> neighbors;
+        glm::mat4 transform{};
+        float speed{1};
     };
 
 public:
@@ -46,6 +53,8 @@ public:
     float CohesionFactor = 1;
     float AreaFactor = 1;
     float FearFactor = 1;
+    // The size of area boids try to stay within.
+    float AreaSize = 10;
     PE::Vec3 BoidScale{1};
 
     // How mant boids should repopulate their neighbor list each frame.
@@ -56,8 +65,8 @@ public:
 private:
     static Boid MakeBoid();
     void PopulateNeighbors(Boid & boid);
-    void UpdateBoid(Boid & boid, float dt);
-    static void MoveBoid(Boid & boid, float dt);
+    void UpdateForce(Boid & boid, float dt);
+    void MoveBoid(Boid & boid, float dt);
 
     [[nodiscard]] PE::Vector AvoidVector(const Boid & boid) const;
     [[nodiscard]] PE::Vector AlignVector(const Boid & boid) const;
@@ -66,11 +75,10 @@ private:
 
     [[nodiscard]] bool InRange(const Boid & A, const Boid & B);
 
-    const BoidController * FearedBoids;
+    const BoidController * FearedBoids{nullptr};
     PE::Vector AreaMax{BOUNDS};
     PE::Vector AreaMin{-BOUNDS};
-    float speed = 1;
-    float turnForce = 2;
+    float turnForce = 1;
     float check_dist_squared = 5;
     std::vector<Boid> Boids;
 

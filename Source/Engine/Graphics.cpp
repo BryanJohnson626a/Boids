@@ -86,11 +86,7 @@ namespace PE
 
         std::cout << "OpenGL version is " << glGetString(GL_VERSION) << std::endl;
 
-        // Compile Shaders.
-        CompileShader(phong_shading, "phong_shading");
-        CompileShader(prerender, "prerender");
-        CompileShader(globallight, "globallight");
-        CompileShader(gbufferdebug, "gbufferdebug");
+        CompileShaders();
 
         // Initialize settings.
         glEnable(GL_DEPTH_TEST);
@@ -500,5 +496,13 @@ namespace PE
     void Graphics::RemoveDebugModel(Model * model)
     {
         debug_objects.remove(model);
+    }
+
+    void Graphics::CompileShaders()
+    {
+        CompileShader(phong_shading, "phong_shading");
+        CompileShader(prerender, "prerender");
+        CompileShader(globallight, "globallight");
+        CompileShader(gbufferdebug, "gbufferdebug");
     }
 }
