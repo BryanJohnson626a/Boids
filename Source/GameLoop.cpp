@@ -10,7 +10,7 @@
 
 #ifndef NDEBUG
 const int DEFAULT_NUM_BOIDS = 500;
-const float BOUNDS = 30;
+const float BOUNDS = 10;
 #else
 const int DEFAULT_NUM_BOIDS = 10000;
 const float BOUNDS = 60;
@@ -49,9 +49,9 @@ void GameInit(std::vector<std::string> cmd_args)
     BoidsType1->AvoidFactor = 0.25f;
     BoidsType1->AlignFactor = 1;
     BoidsType1->CohesionFactor = 1;
-    BoidsType1->AreaFactor = 1.f / 100;
+    BoidsType1->AreaFactor = 1.f / 1000.f;
     BoidsType1->AreaSize = BOUNDS;
-    BoidsType1->FearFactor = 1;
+    BoidsType1->FearFactor = 100;
     BoidsType1->BoidScale = PE::Vec3{.15f};
     BoidsType1->SetMaterial(PE::turquoise);
     BoidsType1->AddBoids(num_boid1);
@@ -61,15 +61,18 @@ void GameInit(std::vector<std::string> cmd_args)
     // Make second boid type.
     BoidsType2 = new BoidController("../Resources/Models/lpfish.obj");
     BoidsType2->AvoidFactor = 2;
-    BoidsType2->AlignFactor = 1;
+    BoidsType2->AlignFactor = 0.5f;
     BoidsType2->CohesionFactor = 2;
-    BoidsType1->AreaFactor = 1.f / 100;
-    BoidsType1->AreaSize = BOUNDS;
+    BoidsType2->AreaFactor = 1.f / 1000.f;
+    BoidsType2->AreaSize = BOUNDS;
     BoidsType2->BoidScale = PE::Vec3{.75f};
+    BoidsType2->SetNeighborDistance(5);
     BoidsType2->SetMaterial(PE::ruby);
     BoidsType2->AddBoids(num_boid2);
 
     PE::Graphics::GetInstance()->AddModel(BoidsType2);
+
+    BoidsType1->AddFearedBoids(BoidsType2);
 
     // Center sphere.
     bounding_sphere = new PE::Model("../Resources/Models/sphere.ply");

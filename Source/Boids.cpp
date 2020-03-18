@@ -58,14 +58,25 @@ void BoidController::PopulateNeighbors(Boid & boid)
     for (int i = 0; i < Boids.size(); ++i)
     {
         float distance_squared = glm::distance2(boid.position, Boids[i].position);
-        if (distance_squared < check_dist_squared && distance_squared != 0)
+        if (distance_squared < neighbor_dist_squared && distance_squared != 0)
             boid.neighbors.emplace_back(i);
+    }
+
+    for (uint feared_group = 0; feared_group < FearedBoids.size(); ++feared_group)
+    {
+        boid.fear_neighbors[feared_group].clear();
+        for (uint feared_boid = 0; feared_boid < FearedBoids[feared_group]->Boids.size(); ++feared_boid)
+        {
+            float distance_squared = glm::distance2(boid.position, FearedBoids[feared_group]->Boids[feared_boid].position);
+            if (distance_squared < fear_dist_squared && distance_squared != 0)
+                boid.fear_neighbors[feared_group].emplace_back(feared_boid);
+        }
     }
 }
 
 void BoidController::UpdateForce(Boid & boid)
 {
-    PE::Vec3 avoid_force{}, align_force{}, cohesion_force{}, wander_force{};
+    PE::Vec3 avoid_force{}, align_force{}, cohesion_force{}, fear_force{};
     if (!boid.neighbors.empty())
     {
         // Get forces from behaviors.
@@ -73,6 +84,7 @@ void BoidController::UpdateForce(Boid & boid)
         boid.force += align_force = AlignVector(boid) * AlignFactor;
         boid.force += cohesion_force = CohesionVector(boid) * CohesionFactor;
     }
+    boid.force += fear_force = FearVector(boid) * FearFactor;
     PE::Vec3 area_force = AreaVector(boid) * AreaFactor;
     boid.force += area_force;
 
@@ -119,6 +131,7 @@ BoidController::Boid BoidController::MakeBoid()
     NewBoid.velocity = RandomVec();
     NewBoid.velocity = glm::normalize(NewBoid.velocity);
     NewBoid.speed = SpeedDie.Roll();
+    NewBoid.fear_neighbors.resize(FearedBoids.size());
     return NewBoid;
 }
 
@@ -158,6 +171,21 @@ PE::Vector BoidController::CohesionVector(const Boid & boid) const
         bVector += Boids[i].position - boid.position;
 
     bVector = glm::normalize(bVector);
+    return bVector;
+}
+
+PE::Vector BoidController::FearVector(const BoidController::Boid & boid) const
+{
+    PE::Vector bVector{};
+
+    // For each group of feared boids, calculate for each neighboring boid from that group.
+    for (uint feared_group = 0; feared_group < boid.fear_neighbors.size(); ++feared_group)
+        for (uint feared_boid = 0; feared_boid < boid.fear_neighbors[feared_group].size(); ++feared_boid)
+            bVector += boid.position - FearedBoids[feared_group]->Boids[feared_boid].position;
+
+    if (bVector != PE::Vec3{0})
+        bVector = glm::normalize(bVector);
+
     return bVector;
 }
 
@@ -246,4 +274,47 @@ void BoidController::DrawDeferred(const PE::Shader * shader, const PE::Mat4 & pr
     }
 
     PE::Graphics::LogError(__FILE__, __LINE__);
+}
+
+void BoidController::AddFearedBoids(const BoidController * feared_boids)
+{
+    // Avoid adding the same boids twice.
+    for (auto * b : FearedBoids)
+        if (b == feared_boids)
+            return;
+
+    FearedBoids.emplace_back(feared_boids);
+    // Since we added a new group of feared boids, we need to add a spot for it to each boid's list.
+    for (auto & b : Boids)
+        b.fear_neighbors.emplace_back(std::vector<uint>());
+}
+
+void BoidController::RemoveFearedBoids(const BoidController * removed_fear)
+{
+    int remove_index = -1;
+    for (uint i = 0; i < FearedBoids.size(); ++i)
+        if (FearedBoids[i] == removed_fear)
+        {
+            remove_index = i;
+            break;
+        }
+
+    // Cant remove something not on the list.
+    if (remove_index == -1)
+        return;
+
+    // Remove feared boids from controller and each boids' neighbor list.
+    FearedBoids.erase(FearedBoids.begin() + remove_index);
+    for (auto & b : Boids)
+        b.fear_neighbors.erase(b.fear_neighbors.begin() + remove_index);
+}
+
+void BoidController::SetNeighborDistance(float distance)
+{
+    neighbor_dist_squared = distance * distance;
+}
+
+void BoidController::SetFearDistance(float distance)
+{
+    fear_dist_squared = distance * distance;
 }

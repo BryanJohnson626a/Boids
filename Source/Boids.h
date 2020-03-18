@@ -16,6 +16,7 @@ class BoidController : public PE::Model
         // Store neighbors by index to avoid
         // pointer invalidation when adding boids.
         std::vector<uint> neighbors;
+        std::vector<std::vector<uint>> fear_neighbors;
         glm::mat4 transform{};
         float speed{1};
     };
@@ -55,8 +56,13 @@ public:
 
     // How mant boids should recalculate their heading each frame.
     uint updates_per_frame = 5000;
+
+    void AddFearedBoids(const BoidController * feared_boids);
+    void RemoveFearedBoids(const BoidController * removed_fear);
+    void SetNeighborDistance(float distance);
+    void SetFearDistance(float distance);
 private:
-    static Boid MakeBoid();
+    Boid MakeBoid();
     void PopulateNeighbors(Boid & boid);
     void UpdateForce(Boid & boid);
     void MoveBoid(Boid & boid, float dt);
@@ -64,11 +70,13 @@ private:
     [[nodiscard]] PE::Vector AvoidVector(const Boid & boid) const;
     [[nodiscard]] PE::Vector AlignVector(const Boid & boid) const;
     [[nodiscard]] PE::Vector CohesionVector(const Boid & boid) const;
+    [[nodiscard]] PE::Vector FearVector(const Boid & boid) const;
     [[nodiscard]] PE::Vector AreaVector(const Boid & boid) const;
 
-    const BoidController * FearedBoids{nullptr};
+    std::vector<const BoidController *> FearedBoids;
     float turnForce = 1;
-    float check_dist_squared = 5;
+    float neighbor_dist_squared = 5;
+    float fear_dist_squared = 25;
     std::vector<Boid> Boids;
 
     uint populates_counter = 0;
