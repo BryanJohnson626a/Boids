@@ -19,18 +19,16 @@
 #include "Color.h"
 #include "FBO.h"
 
-std::vector<std::string> errors; // GL error holder for debug.
-
-bool show_vert_normals = false;
-bool show_face_normals = false;
-const uint INPUT_BUFFER_SIZE = 250;
-char file_input_buffer[INPUT_BUFFER_SIZE] = "";
+#ifndef NDEBUG
+const bool DEBUG_MODE = true;
+#else
+const bool DEBUG_MODE = false;
+#endif
 
 namespace PE
 {
-    const bool DEBUG_MODE = true;
+    std::vector<std::string> errors; // GL error holder for debug.
     const Color FILL_COLOR = BLACK;
-    float cam_fov = glm::radians(90.f);
     const float CAM_NEAR = 0.1f;
     const float CAM_FAR = 1000.f;
 
@@ -53,11 +51,12 @@ namespace PE
             }
             return error;
         }
+        return 0;
     }
 
     void Graphics::PrintErrors()
     {
-        for (const auto& er : errors)
+        for (const auto & er : errors)
             std::cout << er << std::endl;
     }
 
@@ -100,8 +99,10 @@ namespace PE
         PrintErrors();
         assert(errors.empty());
 
-        cam_position = Vec3( 24, 24, 24);
+        cam_position = Vec3(24, 24, 24);
         cam_facing = glm::normalize(Vec3(-1, -1, -1));
+        cam_fov = glm::radians(45.f);
+        RecalcWTNDC();
     }
 
     void Graphics::Initialize()
@@ -149,17 +150,13 @@ namespace PE
     // Update the window and check for events.
     void Graphics::Update(float dt)
     {
-        wtndc_needs_recalc = true;
+        RecalcWTNDC();
 
         PreDraw();
 
         // Draw to default FB.
         //glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, window_size_x, window_size_y);
-
-        SetView(cam_position, cam_facing);
-        cam_fov = glm::radians(45.f);
-        RecalcWTNDC();
 
         LogError(__FILE__, __LINE__);
         RenderObjects(0);
@@ -192,7 +189,7 @@ namespace PE
         SDL_Quit();
     }
 
-    void Graphics::CompileShader(Shader & handle, const std::string& source_name)
+    void Graphics::CompileShader(Shader & handle, const std::string & source_name)
     {
         // Load shader source files
         std::ifstream frag_source("../Resources/Shaders/" + source_name + ".frag");
@@ -305,17 +302,32 @@ namespace PE
     {
         if (wtndc_needs_recalc)
         {
-            Radian y_rot = 0;
-            Radian x_rot = 0;
-
             aspect = float(window_size_x) / float(window_size_y);
 
             projection = glm::perspective(cam_fov, aspect, CAM_NEAR, CAM_FAR);
 
-            view = glm::lookAt(view_position, view_position + view_facing, Up);
+            view = glm::lookAt(cam_position, cam_position + cam_facing, Up);
+            //std::cout << cam_facing.x << ", " << cam_facing.y  << ", " << cam_facing.z << std::endl;
 
             wtndc_needs_recalc = false;
         }
+    }
+
+    void Graphics::RotateCamera(Radian angle, Vec3 axis)
+    {
+        cam_facing = glm::rotate(Mat4{1}, angle, axis) * Vec4(cam_facing, 0);
+        wtndc_needs_recalc = true;
+    }
+
+    void Graphics::MoveCameraRelative(Vec3 movement)
+    {
+        Vec3 relative_forward = cam_facing;
+        Vec3 relative_right = glm::cross(relative_forward, Up);
+        Vec3 relative_up = glm::cross(relative_forward, relative_right);
+        cam_position += relative_forward * movement.x;
+        cam_position += relative_right * movement.y;
+        cam_position += relative_up * movement.z;
+        wtndc_needs_recalc = true;
     }
 
     // Clear the screen prior to drawing.
@@ -471,8 +483,8 @@ namespace PE
 
     void Graphics::SetView(Vec3 position, Vec3 facing)
     {
-        view_position = position;
-        view_facing = facing;
+        cam_position = position;
+        cam_facing = facing;
         wtndc_needs_recalc = true;
     }
 

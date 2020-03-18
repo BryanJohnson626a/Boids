@@ -27,7 +27,6 @@ namespace PE
         // Use to create a single-mesh model.
         explicit Model(std::vector<PE::Mesh>  meshes);
         explicit Model(std::string_view path);
-        ~Model() override;
 
         virtual void DrawDebug(Shader * shader, const Mat4 & projection,
                        const Color * color);
@@ -39,12 +38,17 @@ namespace PE
         void SetRandomMaterials();
 
         [[nodiscard]] const std::vector<Mesh> & GetMeshes() const;
+        void SetWireframe(bool wireframe);
     protected:
         void LoadAllModels(std::string_view directory);
         void LoadModel(std::string_view path);
         void ProcessNode(aiNode * node, const aiScene * scene);
         static Mesh ProcessMesh(aiMesh * mesh, const aiScene * scene);
 
+        // All meshes that represent this model.
         std::vector<Mesh> meshes;
+
+        // If true, will render only the wireframe during debug draw.
+        bool wireframe = false;
     };
 }

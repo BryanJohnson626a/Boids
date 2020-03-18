@@ -6,12 +6,6 @@
 #include "Engine/Transformable.h"
 #include "Engine/Model.h"
 
-#ifndef NDEBUG
-const PE::Vec3 BOUNDS{15.f, 15.f, 15.f};
-#else
-const PE::Vec3 BOUNDS{30.f, 30.f, 30.f};
-#endif
-
 class BoidController : public PE::Model
 {
     struct Boid
@@ -27,7 +21,6 @@ class BoidController : public PE::Model
     };
 
 public:
-    explicit BoidController(std::vector<PE::Mesh> meshes);
     explicit BoidController(std::string_view path);
 
     void AddBoids(uint num);
@@ -65,7 +58,7 @@ public:
 private:
     static Boid MakeBoid();
     void PopulateNeighbors(Boid & boid);
-    void UpdateForce(Boid & boid, float dt);
+    void UpdateForce(Boid & boid);
     void MoveBoid(Boid & boid, float dt);
 
     [[nodiscard]] PE::Vector AvoidVector(const Boid & boid) const;
@@ -73,11 +66,7 @@ private:
     [[nodiscard]] PE::Vector CohesionVector(const Boid & boid) const;
     [[nodiscard]] PE::Vector AreaVector(const Boid & boid) const;
 
-    [[nodiscard]] bool InRange(const Boid & A, const Boid & B);
-
     const BoidController * FearedBoids{nullptr};
-    PE::Vector AreaMax{BOUNDS};
-    PE::Vector AreaMin{-BOUNDS};
     float turnForce = 1;
     float check_dist_squared = 5;
     std::vector<Boid> Boids;

@@ -71,14 +71,14 @@ namespace PE
         void WindowSetBordered(bool bordered);
         void WindowSetPosition(int x, int y);
 
-        // Camera
-        Vec3 view_position{};
-        Vec3 view_facing{};
+        void SetView(Vec3 position, Vec3 facing);
+        void RotateCamera(Radian angle, Vec3 axis);
+        void MoveCameraRelative(Vec3 movement);
+
+        bool wtndc_needs_recalc{ true };
         Vec3 cam_position{};
         Vec3 cam_facing{};
-
-        void SetView(Vec3 position, Vec3 facing);
-        bool wtndc_needs_recalc{ true };
+        float cam_fov;
 
         Mat4 projection{};
         Mat4 view{};

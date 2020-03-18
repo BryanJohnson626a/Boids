@@ -249,6 +249,11 @@ namespace PE
 
     void Model::DrawDebug(Shader * shader, const Mat4 & projection, const Color * color)
     {
+        if (wireframe)
+        {
+            DrawDebugLines(shader, projection, color);
+            return;
+        }
         // Load in uniforms.
         Mat4 transform_final = projection * GetTransform();
         glUniformMatrix4fv(shader->uTransform, 1, GL_FALSE, glm::value_ptr(transform_final));
@@ -302,6 +307,8 @@ namespace PE
         return meshes;
     }
 
-    Model::~Model()
-    = default;
+    void Model::SetWireframe(bool wireframe_in)
+    {
+        wireframe = wireframe_in;
+    }
 }

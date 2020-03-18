@@ -8,9 +8,6 @@
 #include "Engine/Dice.h"
 #include "Engine/Graphics.h"
 
-BoidController::BoidController(std::vector<PE::Mesh> meshes_in) : Model(std::move(meshes_in))
-{}
-
 BoidController::BoidController(std::string_view path) : Model(path)
 {}
 
@@ -47,25 +44,43 @@ void BoidController::Update(float dt)
     for (int i = 0; i < updates_per_frame; ++i)
     {
         updates_counter = (updates_counter + 1) % Boids.size();
-        UpdateForce(Boids[updates_counter], dt);
+        UpdateForce(Boids[updates_counter]);
     }
 
     for (auto & b : Boids)
         MoveBoid(b, dt);
 }
 
-bool BoidController::InRange(const Boid & A, const Boid & B)
-{
-    float distance_squared = glm::distance2(A.position, B.position);
-    return distance_squared < check_dist_squared && distance_squared != 0;
-}
-
 void BoidController::PopulateNeighbors(Boid & boid)
 {
     boid.neighbors.clear();
+
     for (int i = 0; i < Boids.size(); ++i)
-        if (InRange(boid, Boids[i]))
+    {
+        float distance_squared = glm::distance2(boid.position, Boids[i].position);
+        if (distance_squared < check_dist_squared && distance_squared != 0)
             boid.neighbors.emplace_back(i);
+    }
+}
+
+void BoidController::UpdateForce(Boid & boid)
+{
+    PE::Vec3 avoid_force{}, align_force{}, cohesion_force{}, wander_force{};
+    if (!boid.neighbors.empty())
+    {
+        // Get forces from behaviors.
+        boid.force += avoid_force = AvoidVector(boid) * AvoidFactor;
+        boid.force += align_force = AlignVector(boid) * AlignFactor;
+        boid.force += cohesion_force = CohesionVector(boid) * CohesionFactor;
+    }
+    PE::Vec3 area_force = AreaVector(boid) * AreaFactor;
+    boid.force += area_force;
+
+    // Can't normalize a 0 vector and velocity isn't changing so just stop.
+    if (boid.force == PE::Vec3{0})
+        return;
+
+    boid.force = glm::normalize(boid.force);
 }
 
 void BoidController::MoveBoid(Boid & boid, float dt)
@@ -95,39 +110,16 @@ PE::Vector RandomVec()
 BoidController::Boid BoidController::MakeBoid()
 {
     // Random generators for use in this function only.
-    static DieReal XDie(-BOUNDS.x * 0.75f, BOUNDS.x * 0.75f);
-    static DieReal YDie(-BOUNDS.y * 0.75f, BOUNDS.y * 0.75f);
-    static DieReal ZDie(-BOUNDS.z * 0.75f, BOUNDS.z * 0.75f);
+    static DieReal PosDie(-30, 30);
     static DieReal SpeedDie(1, 2);
 
     // Create boid with random location and velocity.
     Boid NewBoid;
-    NewBoid.position = PE::Vector{XDie.Roll(), YDie.Roll(), ZDie.Roll()};
+    NewBoid.position = PE::Vector{PosDie.Roll(), PosDie.Roll(), PosDie.Roll()};
     NewBoid.velocity = RandomVec();
     NewBoid.velocity = glm::normalize(NewBoid.velocity);
     NewBoid.speed = SpeedDie.Roll();
     return NewBoid;
-}
-
-void BoidController::UpdateForce(BoidController::Boid & boid, float dt)
-{
-    boid.force = PE::Vec3{0};
-    PE::Vec3 avoid_force{}, align_force{}, cohesion_force{}, wander_force{};
-    if (!boid.neighbors.empty())
-    {
-        // Get forces from behaviors.
-        boid.force += avoid_force = AvoidVector(boid) * AvoidFactor;
-        boid.force += align_force = AlignVector(boid) * AlignFactor;
-        boid.force += cohesion_force = CohesionVector(boid) * CohesionFactor;
-    }
-    PE::Vec3 area_force = AreaVector(boid) * AreaFactor;
-    boid.force += area_force;
-
-    // Can't normalize a 0 vector and velocity isn't changing so just stop.
-    if (boid.force == PE::Vec3{0})
-        return;
-
-    boid.force = glm::normalize(boid.force);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
