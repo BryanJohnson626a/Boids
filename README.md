@@ -10,7 +10,7 @@ Each boid has three primary behaviors: Alignment, Cohesion, and Avoidance. Align
 
 # Usage
 
-By default, the program runs with 10000 boids. The boids will move and interact without any need for input from the user. Optionally, if a number is given as a command line argument, that number of boids will spawn instead. If two numbers are given, the first will be the number of normal boids, and the second will be the number of larger boids that scare away the smaller boids. Command line input is processed naively so entering anything other than one or two integers could cause undefined behavior and is not recommended.
+By default, the program runs with 10,000 boids. The boids will move and interact without any need for input from the user. Optionally, if a number is given as a command line argument, that number of boids will spawn instead. If two numbers are given, the first will be the number of normal boids, and the second will be the number of larger boids that scare away the smaller boids. Command line input is processed naively so entering anything other than one or two integers could cause undefined behavior and is not recommended.
 
 More boids can be spawned mid-session by pressing 1 to remove 100 boids or 2 to add 100 boids. The function keys also give control over debug shader modes and shader hot recompilation.
 
@@ -20,14 +20,14 @@ In order to support tens of thousands of boids moving simultaneously in real-tim
 
 Most behaviors follow the inverse square law, with distant boids having little or no effect on the behavior of a boid, compared to the effect of those closer to it. Thus, much time is wasted making calculations that don't actually affect the simulation. Thus, my first optimization was to add a quick range check before one boid looks at another, to avoid making unnecessary calculations. To be sure this check is as fast as possible, distance squared is used instead of distance, saving  millions of expensive square-root calculations.
 
-However while a distance check is much cheaper than doing a full behavior calculation, with 10000 boids looking at 9999 other boids, that’s still nearly a hundred million checks made each frame. My second optimization came from realising that for the most part, which boids are close to each other doesn’t change very much from frame to frame. Instead of checking for distance against the entire list of boids, it would be much more efficient to make that check once, keep a record of which boids are close by, and then re-use that list of boids for the next second or two.
+However while a distance check is much cheaper than doing a full behavior calculation, with 10,000 boids each looking at 10,000 other boids, that’s still a hundred million checks made each frame. My second optimization came from realising that for the most part, which boids are close to each other doesn’t change very much from frame to frame. Instead of checking for distance against the entire list of boids, it would be much more efficient to make that check once, keep a record of which boids are close by, and then re-use that list of boids for the next second or two. To avoid having all boids update on the same frame, only a certain percentage are fully updated each frame, rotating through the entire set every 2 seconds.
 
-To avoid having all boids update on the same frame, only a certain percentage are fully updated each frame, rotating through the entire set every 2 seconds.
+Neighbor lookup is also sped up considerably using spatial partitioning. A 3d array keeps track of which boids are in any given cube of space, and neighbor lookup is optimized by having boids only search grid positions that are likely to contain neighbors (ideally just the surrounding 9). Boids update what grid position they occupy in a staggered fashion much like most other operations.
 
-These optimizations together allow the program to run with over thirty thousand boids (on an AMD Ryzen 5 3600X), compared to only a few hundred beforehand.
+These optimizations together allow the program to run with over fifty thousand boids (on an AMD Ryzen 5 3600X), compared to only a few hundred beforehand. Limited testing showed that without drawing the boids I could get roughly 100,000 updating at 60fps. My graphics card is a few years old so a better one may handle 60,000+ boids better than mine.
 
-# Future plans
+# Potential Future Optimizations
 
-Some optimizations I plan to do in the future:
+1) Split up tasks into multiple threads.
 
-1) Use an octree or similar data structure to track boids, further speeding up the neighbor check and moving the algorithm fully from O(n^2) to O(nlogn).
+2) Move some or all calculations into compute shaders, making them massively parallel. Update Force and Update Position are likely candidates for this.
