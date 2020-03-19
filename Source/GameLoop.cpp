@@ -9,7 +9,7 @@
 #include "Engine/Graphics.h"
 
 #ifndef NDEBUG
-const int DEFAULT_NUM_BOIDS = 500;
+const int DEFAULT_NUM_BOIDS = 1024;
 const float BOUNDS = 10;
 #else
 const int DEFAULT_NUM_BOIDS = 10000;
@@ -59,7 +59,7 @@ void GameInit(std::vector<std::string> cmd_args)
     PE::Graphics::GetInstance()->AddModel(BoidsType1);
 
     // Make second boid type.
-    BoidsType2 = new BoidController("../Resources/Models/lpfish.obj");
+    BoidsType2 = new BoidController("../Resources/Models/fish.obj");
     BoidsType2->AvoidFactor = 2;
     BoidsType2->AlignFactor = 0.5f;
     BoidsType2->CohesionFactor = 2;
@@ -78,7 +78,7 @@ void GameInit(std::vector<std::string> cmd_args)
     bounding_sphere = new PE::Model("../Resources/Models/sphere.ply");
     bounding_sphere->SetScale(1);
     bounding_sphere->SetMaterial(PE::silver);
-    PE::Graphics::GetInstance()->AddModel(bounding_sphere);
+    //PE::Graphics::GetInstance()->AddModel(bounding_sphere);
 }
 
 bool GameLoop(float dt)

@@ -56,6 +56,7 @@ namespace PE
 
         glBindVertexArray(0);
         Graphics::LogError(__FILE__, __LINE__);
+
     }
 
     // Delete GPU buffers.

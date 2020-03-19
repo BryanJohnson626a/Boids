@@ -8,6 +8,10 @@
 
 class BoidController : public PE::Model
 {
+    struct BoidRenderInfo
+    {
+        glm::mat4 transform{};
+    };
     struct Boid
     {
         PE::Vector position{};
@@ -17,7 +21,6 @@ class BoidController : public PE::Model
         // pointer invalidation when adding boids.
         std::vector<uint> neighbors;
         std::vector<std::vector<uint>> fear_neighbors;
-        glm::mat4 transform{};
         float speed{1};
     };
 
@@ -66,6 +69,7 @@ private:
     void PopulateNeighbors(Boid & boid);
     void UpdateForce(Boid & boid);
     void MoveBoid(Boid & boid, float dt);
+    void UpdateTransform(const Boid & boid, PE::Mat4& boid_render_info);
 
     [[nodiscard]] PE::Vector AvoidVector(const Boid & boid) const;
     [[nodiscard]] PE::Vector AlignVector(const Boid & boid) const;
@@ -78,6 +82,10 @@ private:
     float neighbor_dist_squared = 5;
     float fear_dist_squared = 25;
     std::vector<Boid> Boids;
+    //std::vector<BoidRenderInfo> BoidData;
+    std::vector<PE::Mat4> BoidData;
+
+    GLuint BoidDataBuffer = 0;
 
     uint populates_counter = 0;
     uint updates_counter = 0;

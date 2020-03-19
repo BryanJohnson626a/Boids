@@ -24,12 +24,10 @@ However while a distance check is much cheaper than doing a full behavior calcul
 
 To avoid having all boids update on the same frame, only a certain percentage are fully updated each frame, rotating through the entire set every 2 seconds.
 
-These optimizations allow the program to run with over ten thousand boids, compared to only a few hundred beforehand.
+These optimizations together allow the program to run with over thirty thousand boids (on an AMD Ryzen 5 3600X), compared to only a few hundred beforehand.
 
 # Future plans
 
 Some optimizations I plan to do in the future:
 
 1) Use an octree or similar data structure to track boids, further speeding up the neighbor check and moving the algorithm fully from O(n^2) to O(nlogn).
-
-2) Optimize rendering to more efficiently draw large numbers of boids. Perhaps pushing most or all of the boid data to the graphics card in a single chunk would help? Needs looking into. Drawing the boids now takes more CPU time than anything else, so getting this to be more efficient is high priority.
