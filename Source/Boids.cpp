@@ -8,6 +8,8 @@
 #include "Engine/Dice.h"
 #include "Engine/Graphics.h"
 
+static const bool OUT_NEIGHBOR_CHECK_INFO = false;
+
 BoidController::BoidController(std::string_view path) : Model(path)
 {
     // vertex buffer object
@@ -50,7 +52,11 @@ void BoidController::AddBoids(uint num)
     BoidData.resize(Boids.size());
 
     updates_per_frame = Boids.size() / 2;
+    grid_updates_per_frame = Boids.size() / 32;
     populates_per_frame = Boids.size() / 120;
+
+    // Place all boids in their appropriate grid position.
+    PopulateGrid();
 }
 
 void BoidController::RemoveBoids(uint num)
@@ -68,15 +74,37 @@ void BoidController::RemoveBoids(uint num)
     }
 }
 
+BoidController::GridPos BoidController::GetGridPosition(const PE::Vec3 & position)
+{
+    uint x = uint(GRID_SIZE * (position.x + grid_offset) / grid_size);
+    uint y = uint(GRID_SIZE * (position.y + grid_offset) / grid_size);
+    uint z = uint(GRID_SIZE * (position.z + grid_offset) / grid_size);
+    return BoidController::GridPos{x, y, z};
+}
+
+static uint grid_positions_changed, boids_checked, boids_added, grids_checked;
+
 void BoidController::Update(float dt)
 {
     if (Boids.empty())
         return;
 
+    if (OUT_NEIGHBOR_CHECK_INFO)
+    {
+        grids_checked = 0;
+        boids_checked = 0;
+        boids_added = 0;
+    }
     for (int i = 0; i < populates_per_frame; ++i)
     {
         populates_counter = (populates_counter + 1) % Boids.size();
         PopulateNeighbors(Boids[populates_counter]);
+    }
+    if (OUT_NEIGHBOR_CHECK_INFO)
+    {
+        std::cout << (float) grids_checked / (float) populates_per_frame << ", ";
+        std::cout << (float) boids_checked / (float) populates_per_frame << ", ";
+        std::cout << (float) boids_added / (float) populates_per_frame << std::endl;
     }
 
     for (int i = 0; i < updates_per_frame; ++i)
@@ -90,18 +118,58 @@ void BoidController::Update(float dt)
         MoveBoid(Boids[i], dt);
         UpdateTransform(Boids[i], BoidData[i]);
     }
+
+    //grid_positions_changed = 0;
+    for (int i = 0; i < grid_updates_per_frame; ++i)
+    {
+        grid_updates_counter = (grid_updates_counter + 1) % Boids.size();
+        UpdateGridPosition(grid_updates_counter);
+    }
+    //std::cout << (float)grid_positions_changed / (float)grid_updates_per_frame << std::endl;
+}
+
+void BoidController::PopulateGrid()
+{
+    // Clear all boids from the grid.
+    for (int x = 0; x < GRID_SIZE; ++x)
+        for (int y = 0; y < GRID_SIZE; ++y)
+            for (int z = 0; z < GRID_SIZE; ++z)
+                PositionGrid[x][y][z].clear();
+
+    for (int i = 0; i < Boids.size(); ++i)
+    {
+        auto pos = GetGridPosition(Boids[i].position);
+        if (pos.x < GRID_SIZE && pos.y < GRID_SIZE && pos.z < GRID_SIZE)
+            PositionGrid[pos.x][pos.y][pos.z].emplace_back(i);
+    }
 }
 
 void BoidController::PopulateNeighbors(Boid & boid)
 {
     boid.neighbors.clear();
 
-    for (int i = 0; i < Boids.size(); ++i)
-    {
-        float distance_squared = glm::distance2(boid.position, Boids[i].position);
-        if (distance_squared < neighbor_dist_squared && distance_squared != 0)
-            boid.neighbors.emplace_back(i);
-    }
+    auto position = GetGridPosition(boid.position);
+
+    // Check for neighbors in grid cubes near the boid's.
+    for (int x = std::max((int) position.x - neighbor_search_distance, 0);
+         x < std::min(position.x + neighbor_search_distance, GRID_SIZE); ++x)
+        for (int y = std::max((int) position.y - neighbor_search_distance, 0);
+             y < std::min(position.y + neighbor_search_distance, GRID_SIZE); ++y)
+            for (int z = std::max((int) position.z - neighbor_search_distance, 0);
+                 z < std::min(position.z + neighbor_search_distance, GRID_SIZE); ++z)
+            {
+                if (OUT_NEIGHBOR_CHECK_INFO) ++grids_checked;
+                for (auto i : PositionGrid[x][y][z])
+                {
+                    float distance_squared = glm::distance2(boid.position, Boids[i].position);
+                    if (distance_squared < neighbor_dist_squared && distance_squared != 0)
+                    {
+                        boid.neighbors.emplace_back(i);
+                        if (OUT_NEIGHBOR_CHECK_INFO) ++boids_added;
+                    }
+                    if (OUT_NEIGHBOR_CHECK_INFO) ++boids_checked;
+                }
+            }
 
     for (uint feared_group = 0; feared_group < FearedBoids.size(); ++feared_group)
     {
@@ -148,7 +216,24 @@ void BoidController::MoveBoid(Boid & boid, float dt)
     boid.position += boid.velocity * dt;
 }
 
-void BoidController::UpdateTransform(const BoidController::Boid & boid, PE::Mat4 & boid_render_info)
+void BoidController::UpdateGridPosition(uint boid_index)
+{
+    auto & boid = Boids[boid_index];
+    GridPos new_pos = GetGridPosition(boid.position);
+    if (new_pos != boid.grid_position && new_pos.x < GRID_SIZE && new_pos.y < GRID_SIZE && new_pos.z < GRID_SIZE)
+    {
+        // Remove boid from old position.
+        auto & v = PositionGrid[boid.grid_position.x][boid.grid_position.y][boid.grid_position.z];
+        v.erase(std::remove(v.begin(), v.end(), boid_index), v.end());
+
+        // Add to new position.
+        PositionGrid[new_pos.x][new_pos.y][new_pos.z].emplace_back(boid_index);
+        boid.grid_position = new_pos;
+
+    }
+}
+
+void BoidController::UpdateTransform(const Boid & boid, PE::Mat4 & boid_render_info)
 {
     // Update boid transform to new position and heading.
     // Using boid position as "Up" vector means up is always away from the center.
@@ -212,15 +297,33 @@ void BoidController::RemoveFearedBoids(const BoidController * removed_fear)
         b.fear_neighbors.erase(b.fear_neighbors.begin() + remove_index);
 }
 
-void BoidController::SetNeighborDistance(float distance)
-{
-    neighbor_dist_squared = distance * distance;
-}
-
 void BoidController::SetFearDistance(float distance)
 {
     fear_dist_squared = distance * distance;
 }
+
+void BoidController::SetNeighborDistance(float distance)
+{
+    neighbor_dist_squared = distance * distance;
+    UpdateNeighborSearchDistance();
+}
+
+void BoidController::SetAreaSize(float size)
+{
+    AreaSize = size;
+    grid_offset = size * 1.2f;
+    grid_size = size * 2.4f;
+
+    UpdateNeighborSearchDistance();
+}
+
+void BoidController::UpdateNeighborSearchDistance()
+{
+    float distance = std::sqrt(neighbor_dist_squared);
+    float grid_width = (grid_size / (float) GRID_SIZE);
+    neighbor_search_distance = std::floor(distance / grid_width);
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 // Behavior code.
@@ -359,4 +462,14 @@ void BoidController::DrawDeferred(const PE::Shader * shader, const PE::Mat4 & pr
     }
 
     PE::Graphics::LogError(__FILE__, __LINE__);
+}
+
+bool BoidController::GridPos::operator==(const BoidController::GridPos & other)
+{
+    return x == other.x && y == other.y && z == other.z;
+}
+
+bool BoidController::GridPos::operator!=(const BoidController::GridPos & other)
+{
+    return !((*this) == other);
 }

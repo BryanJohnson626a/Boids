@@ -50,9 +50,10 @@ void GameInit(std::vector<std::string> cmd_args)
     BoidsType1->AlignFactor = 1;
     BoidsType1->CohesionFactor = 1;
     BoidsType1->AreaFactor = 1.f / 1000.f;
-    BoidsType1->AreaSize = BOUNDS;
+    BoidsType1->SetAreaSize(BOUNDS);
     BoidsType1->FearFactor = 100;
     BoidsType1->BoidScale = PE::Vec3{.15f};
+    BoidsType1->SetNeighborDistance(2);
     BoidsType1->SetMaterial(PE::turquoise);
     BoidsType1->AddBoids(num_boid1);
 
@@ -64,7 +65,7 @@ void GameInit(std::vector<std::string> cmd_args)
     BoidsType2->AlignFactor = 0.5f;
     BoidsType2->CohesionFactor = 2;
     BoidsType2->AreaFactor = 1.f / 1000.f;
-    BoidsType2->AreaSize = BOUNDS;
+    BoidsType2->SetAreaSize(BOUNDS);
     BoidsType2->BoidScale = PE::Vec3{.75f};
     BoidsType2->SetNeighborDistance(5);
     BoidsType2->SetMaterial(PE::ruby);
