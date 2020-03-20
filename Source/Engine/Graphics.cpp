@@ -81,7 +81,7 @@ namespace PE
 
         gBuffer = new PrerenderFBO();
 
-        SetScreenSize(false, 1080, 720);
+        SetScreenSize(false, 1920, 1080);
 
         std::cout << "OpenGL version is " << glGetString(GL_VERSION) << std::endl;
 
@@ -265,8 +265,9 @@ namespace PE
 
         // Set up uniforms.
         shader.uTransform = glGetUniformLocation(shader.program, "transform");
-        shader.uModelTransform = glGetUniformLocation(shader.program, "model_transform");
+        shader.uModelInverse = glGetUniformLocation(shader.program, "model_inverse");
         shader.uViewPosition = glGetUniformLocation(shader.program, "view_position");
+        shader.uLightPosition = glGetUniformLocation(shader.program, "light_position");
         shader.uObjectColor = glGetUniformLocation(shader.program, "object_color");
         shader.uDiffuse = glGetUniformLocation(shader.program, "diffuse");
         shader.uSpecular = glGetUniformLocation(shader.program, "specular");
@@ -360,7 +361,6 @@ namespace PE
         LogError(__FILE__, __LINE__);
 
         // Set the viewport, and clear the screen
-        glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         LogError(__FILE__, __LINE__);
 
@@ -404,6 +404,7 @@ namespace PE
 
         // Load in uniforms.
         glUniform3fv(current_shader->uViewPosition, 1, glm::value_ptr(cam_position));
+        glUniform3fv(current_shader->uLightPosition, 1, glm::value_ptr(cam_position));
         LogError(__FILE__, __LINE__);
 
         // Draw faces.

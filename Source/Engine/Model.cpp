@@ -280,8 +280,9 @@ namespace PE
     {
         // Load in uniforms.
         Mat4 transform_final = projection * GetTransform();
+        Mat4 model_inverse = glm::transpose(glm::inverse(GetTransform()));
         glUniformMatrix4fv(shader->uTransform, 1, GL_FALSE, glm::value_ptr(transform_final));
-        glUniformMatrix4fv(shader->uModelTransform, 1, GL_FALSE, glm::value_ptr(GetTransform()));
+        glUniformMatrix4fv(shader->uModelInverse, 1, GL_FALSE, glm::value_ptr(model_inverse));
         Graphics::LogError(__FILE__, __LINE__);
 
         for (const Mesh & mesh : meshes)

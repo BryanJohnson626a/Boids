@@ -9,10 +9,10 @@
 #include "Engine/Graphics.h"
 
 #ifndef NDEBUG
-const int DEFAULT_NUM_BOIDS = 1024;
+const int DEFAULT_NUM_BOIDS = 1000;
 const float BOUNDS = 10;
 #else
-const int DEFAULT_NUM_BOIDS = 10000;
+const int DEFAULT_NUM_BOIDS = 40000;
 const float BOUNDS = 60;
 #endif
 
@@ -167,27 +167,27 @@ bool GameLoop(float dt)
                         BoidsType2->AddBoids(10);
                         break;
                     case SDLK_F1:
+                        PE::Graphics::GetInstance()->debug_mode = 0;
+                    case SDLK_F2:
                         PE::Graphics::GetInstance()->debug_mode = 1;
                         break;
-                    case SDLK_F2:
+                    case SDLK_F3:
                         PE::Graphics::GetInstance()->debug_mode = 2;
                         break;
-                    case SDLK_F3:
+                    case SDLK_F4:
                         PE::Graphics::GetInstance()->debug_mode = 3;
                         break;
-                    case SDLK_F4:
+                    case SDLK_F5:
                         PE::Graphics::GetInstance()->debug_mode = 4;
                         break;
-                    case SDLK_F5:
+                    case SDLK_F6:
                         PE::Graphics::GetInstance()->debug_mode = 5;
                         break;
-                    case SDLK_F6:
+                    case SDLK_F7:
                         PE::Graphics::GetInstance()->debug_mode = 6;
                         break;
-                    case SDLK_F10:
-                        PE::Graphics::GetInstance()->debug_mode = 0;
                         break;
-                    case SDLK_F11:
+                    case SDLK_F12:
                         PE::Graphics::GetInstance()->CompileShaders();
                         break;
                     default:

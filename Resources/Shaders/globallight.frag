@@ -1,13 +1,14 @@
 #version 430 core
 
-uniform mat4 WorldInverse;
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gDiffuse;
 uniform sampler2D gSpecular;
+uniform mat4 model_inverse;
 uniform vec3 view_position;
+uniform vec3 light_position;
 
-const float ambient = 0.15f;
+const float ambient_factor = 0.05f;
 
 in vec2 TexCoords;
 
@@ -17,24 +18,24 @@ void main()
 {
     // retrieve data from G-buffer
     vec3 worldPos = texture(gPosition, TexCoords).xyz;
-    vec3 N = normalize(texture(gNormal, TexCoords).xyz);
-    vec3 Kd = texture(gDiffuse, TexCoords).rgb;
-    vec3 specular = texture(gSpecular, TexCoords).rgb;
+    vec3 normal = normalize(texture(gNormal, TexCoords)).xyz;
+    vec3 diffuse_color = texture(gDiffuse, TexCoords).rgb;
+    vec3 specular_color = texture(gSpecular, TexCoords).rgb;
     float shininess = texture(gNormal, TexCoords).a;
 
     // Calculate lighting (Blinn-Phong
-    vec3 L = view_position - worldPos;
-    float distance = pow(length(L), 1.5);
-    L = normalize(L);
-    vec3 eye = (WorldInverse*vec4(view_position, 0)).xyz;
-    vec3 V = normalize(eye - worldPos);
-    vec3 H = normalize(L+V);
-    float NL = clamp(dot(N, L), 0, 1);
-    float NV = clamp(dot(N, V), 0, 1);
-    float HN = clamp(dot(H, N), 0, 1);
-    float distance_factor = clamp(100 / distance,0,1);
+    vec3 light_vector = light_position - worldPos;
+    float distance = length(light_vector);
+    vec3 lightDir   = normalize(light_vector);
+    vec3 eye = (model_inverse*vec4(view_position, 0)).xyz;
+    vec3 viewDir    = normalize(eye - worldPos);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
 
-    vec3 out_color = Kd * ambient + (Kd * NL + specular * pow(HN, shininess*255)) * distance_factor;
+    vec3 ambient  = diffuse_color * ambient_factor;
+    vec3 diffuse  = diffuse_color * max(dot(normal, lightDir), 0.0);
+    vec3 specular = specular_color * pow(max(dot(normal, halfwayDir), 0.0), shininess*255);
+
+    vec3 out_color = ambient + (diffuse + specular) * max(0, min(2000 / (distance * distance), 1-ambient_factor));
 
     FragColor = vec4(out_color, 1);
 }

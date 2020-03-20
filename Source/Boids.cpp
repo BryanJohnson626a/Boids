@@ -442,6 +442,8 @@ void BoidController::DrawDeferred(const PE::Shader * shader, const PE::Mat4 & pr
     glBufferData(GL_ARRAY_BUFFER, Boids.size() * sizeof(glm::mat4), &BoidData[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    PE::Mat4 model_inverse = glm::transpose(glm::inverse(GetTransform()));
+
     // Draw one mesh at a time to reduce uniform setting.
     for (const PE::Mesh & mesh : meshes)
     {

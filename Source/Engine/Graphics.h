@@ -28,8 +28,9 @@ namespace PE
 
         // Uniforms.
         GLuint uTransform = 0;
-        GLuint uModelTransform = 0;
+        GLuint uModelInverse = 0;
         GLuint uViewPosition = 0;
+        GLuint uLightPosition = 0;
         GLuint uObjectColor = 0;
         GLuint uDiffuse = 0;
         GLuint uSpecular = 0;

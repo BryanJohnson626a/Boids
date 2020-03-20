@@ -18,6 +18,6 @@ void main()
 {
   mat4 final_transform = transform * transform_instance;
   gl_Position = final_transform * vec4(position, 1);
-  vs_out.position = vec3(gl_Position);
-  vs_out.normal = vec3(final_transform * vec4(normal, 0));
+  vs_out.position = vec3(transform_instance * vec4(position, 1));
+  vs_out.normal = mat3(transform_instance) * normal;
 }
