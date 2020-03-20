@@ -35,7 +35,7 @@ void main()
     vec3 diffuse  = diffuse_color * max(dot(normal, lightDir), 0.0);
     vec3 specular = specular_color * pow(max(dot(normal, halfwayDir), 0.0), shininess*255);
 
-    vec3 out_color = ambient + (diffuse + specular) * max(0, min(2000 / (distance * distance), 1-ambient_factor));
+    vec3 out_color = ambient + (diffuse + specular) * max(0, min(5000 / (distance * distance), 1-ambient_factor));
 
     FragColor = vec4(out_color, 1);
 }
