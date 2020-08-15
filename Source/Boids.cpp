@@ -12,10 +12,12 @@ static const bool OUT_NEIGHBOR_CHECK_INFO = false;
 
 BoidController::BoidController(std::string_view path) : Model(path)
 {
+    // Create data used to mass-render boids.
+    
     // vertex buffer object
     glGenBuffers(1, &BoidDataBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, BoidDataBuffer);
-
+    
     // Add instance transform attributes to mesh VAOs.
     for (auto & mesh : meshes)
     {
@@ -26,20 +28,23 @@ BoidController::BoidController(std::string_view path) : Model(path)
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) 0);
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) static_cast<unsigned long long>(1 * vec4Size));
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE,
+                              4 * vec4Size, (void *) static_cast<unsigned long long>(1 * vec4Size));
         glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) static_cast<unsigned long long>(2 * vec4Size));
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE,
+                              4 * vec4Size, (void *) static_cast<unsigned long long>(2 * vec4Size));
         glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) static_cast<unsigned long long>(3 * vec4Size));
-
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE,
+                              4 * vec4Size, (void *) static_cast<unsigned long long>(3 * vec4Size));
+        
         glVertexAttribDivisor(3, 1);
         glVertexAttribDivisor(4, 1);
         glVertexAttribDivisor(5, 1);
         glVertexAttribDivisor(6, 1);
-
+        
         glBindVertexArray(0);
     }
-
+    
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -48,13 +53,13 @@ void BoidController::AddBoids(uint num)
     Boids.reserve(Boids.size() + num);
     for (uint i = 0; i < num; ++i)
         Boids.emplace_back(MakeBoid());
-
+    
     BoidData.resize(Boids.size());
-
+    
     updates_per_frame = static_cast<uint>(Boids.size() / 2);
     grid_updates_per_frame = static_cast<uint>(Boids.size() / 32);
     populates_per_frame = static_cast<uint>(Boids.size() / 120);
-
+    
     // Place all boids in their appropriate grid position.
     PopulateGrid();
 }
@@ -88,7 +93,7 @@ void BoidController::Update(float dt)
 {
     if (Boids.empty())
         return;
-
+    
     if (OUT_NEIGHBOR_CHECK_INFO)
     {
         grids_checked = 0;
@@ -106,19 +111,19 @@ void BoidController::Update(float dt)
         std::cout << (float) boids_checked / (float) populates_per_frame << ", ";
         std::cout << (float) boids_added / (float) populates_per_frame << std::endl;
     }
-
+    
     for (uint i = 0; i < updates_per_frame; ++i)
     {
         updates_counter = (updates_counter + 1) % Boids.size();
         UpdateForce(Boids[updates_counter]);
     }
-
+    
     for (uint i = 0; i < Boids.size(); ++i)
     {
         MoveBoid(Boids[i], dt);
         UpdateTransform(Boids[i], BoidData[i]);
     }
-
+    
     //grid_positions_changed = 0;
     for (uint i = 0; i < grid_updates_per_frame; ++i)
     {
@@ -135,7 +140,7 @@ void BoidController::PopulateGrid()
         for (int y = 0; y < GRID_SIZE; ++y)
             for (int z = 0; z < GRID_SIZE; ++z)
                 PositionGrid[x][y][z].clear();
-
+    
     for (int i = 0; i < Boids.size(); ++i)
     {
         auto pos = GetGridPosition(Boids[i].position);
@@ -147,9 +152,9 @@ void BoidController::PopulateGrid()
 void BoidController::PopulateNeighbors(Boid & boid)
 {
     boid.neighbors.clear();
-
+    
     auto position = GetGridPosition(boid.position);
-
+    
     // Check for neighbors in grid cubes near the boid's.
     for (uint x = std::max((int) position.x - neighbor_search_distance, 0);
          x < std::min(position.x + neighbor_search_distance, GRID_SIZE); ++x)
@@ -170,7 +175,7 @@ void BoidController::PopulateNeighbors(Boid & boid)
                     if (OUT_NEIGHBOR_CHECK_INFO) ++boids_checked;
                 }
             }
-
+    
     for (uint feared_group = 0; feared_group < FearedBoids.size(); ++feared_group)
     {
         boid.fear_neighbors[feared_group].clear();
@@ -197,11 +202,11 @@ void BoidController::UpdateForce(Boid & boid)
     boid.force += fear_force = FearVector(boid) * FearFactor;
     PE::Vec3 area_force = AreaVector(boid) * AreaFactor;
     boid.force += area_force;
-
+    
     // Can't normalize a 0 vector and velocity isn't changing so just stop.
     if (boid.force == PE::Vec3{0})
         return;
-
+    
     boid.force = glm::normalize(boid.force);
 }
 
@@ -211,7 +216,7 @@ void BoidController::MoveBoid(Boid & boid, float dt)
     // wants to go, then scale that velocity to move speed.
     boid.velocity += boid.force * TurnForce * dt;
     boid.velocity = glm::normalize(boid.velocity) * boid.speed * Speed;
-
+    
     if (ContinuousContainer && glm::length(boid.position) > area_size * 1.5f)
         boid.position *= -1;
     if (HardContainer && glm::length(boid.position) > area_size * 1.5f)
@@ -230,11 +235,11 @@ void BoidController::UpdateGridPosition(uint boid_index)
         // Remove boid from old position.
         auto & v = PositionGrid[boid.grid_position.x][boid.grid_position.y][boid.grid_position.z];
         v.erase(std::remove(v.begin(), v.end(), boid_index), v.end());
-
+        
         // Add to new position.
         PositionGrid[new_pos.x][new_pos.y][new_pos.z].emplace_back(boid_index);
         boid.grid_position = new_pos;
-
+        
     }
 }
 
@@ -258,7 +263,7 @@ BoidController::Boid BoidController::MakeBoid()
     // Random generators for use in this function only.
     static DieReal PosDie(-1, 1);
     static DieReal SpeedDie(1, 2);
-
+    
     // Create boid with random location and velocity.
     Boid NewBoid;
     NewBoid.position = PE::Vector{PosDie.Roll(), PosDie.Roll(), PosDie.Roll()} * area_size;
@@ -275,7 +280,7 @@ void BoidController::AddFearedBoids(const BoidController * feared_boids)
     for (auto * b : FearedBoids)
         if (b == feared_boids)
             return;
-
+    
     FearedBoids.emplace_back(feared_boids);
     // Since we added a new group of feared boids, we need to add a spot for it to each boid's list.
     for (auto & b : Boids)
@@ -291,11 +296,11 @@ void BoidController::RemoveFearedBoids(const BoidController * removed_fear)
             remove_index = i;
             break;
         }
-
+    
     // Cant remove something not on the list.
     if (remove_index == -1)
         return;
-
+    
     // Remove feared boids from controller and each boids' neighbor list.
     FearedBoids.erase(FearedBoids.begin() + remove_index);
     for (auto & b : Boids)
@@ -318,7 +323,7 @@ void BoidController::SetAreaSize(float size)
     area_size = size;
     grid_offset = size * 1.2f;
     grid_size = size * 2.4f;
-
+    
     UpdateNeighborSearchDistance();
 }
 
@@ -336,7 +341,7 @@ void BoidController::UpdateNeighborSearchDistance()
 PE::Vector BoidController::AvoidVector(const Boid & boid) const
 {
     PE::Vector bVector{};
-
+    
     for (auto i : boid.neighbors)
     {
         float dist = glm::distance2(Boids[i].position, boid.position);
@@ -349,22 +354,22 @@ PE::Vector BoidController::AvoidVector(const Boid & boid) const
 PE::Vector BoidController::AlignVector(const Boid & boid) const
 {
     PE::Vector bVector{};
-
+    
     for (auto i : boid.neighbors)
         bVector += Boids[i].velocity;
-
+    
     bVector = glm::normalize(bVector);
-
+    
     return bVector;
 }
 
 PE::Vector BoidController::CohesionVector(const Boid & boid) const
 {
     PE::Vector bVector{};
-
+    
     for (auto i : boid.neighbors)
         bVector += Boids[i].position - boid.position;
-
+    
     bVector = glm::normalize(bVector);
     return bVector;
 }
@@ -372,15 +377,15 @@ PE::Vector BoidController::CohesionVector(const Boid & boid) const
 PE::Vector BoidController::FearVector(const BoidController::Boid & boid) const
 {
     PE::Vector bVector{};
-
+    
     // For each group of feared boids, calculate for each neighboring boid from that group.
     for (uint feared_group = 0; feared_group < boid.fear_neighbors.size(); ++feared_group)
         for (uint feared_boid = 0; feared_boid < boid.fear_neighbors[feared_group].size(); ++feared_boid)
             bVector += boid.position - FearedBoids[feared_group]->Boids[feared_boid].position;
-
+    
     if (bVector != PE::Vec3{0})
         bVector = glm::normalize(bVector);
-
+    
     return bVector;
 }
 
@@ -397,14 +402,14 @@ void BoidController::DrawDebug(PE::Shader * shader, const PE::Mat4 & projection,
 {
     // Draw each boid using it's individual position and rotation.
     PE::Mat4 transform_final = projection * GetTransform();
-
+    
     // Draw one mesh at a time to reduce uniform setting.
     for (const PE::Mesh & mesh : meshes)
     {
         glUniform4fv(shader->uObjectColor, 1, &color->R);
         glBindVertexArray(mesh.VAO);
         PE::Graphics::LogError(__FILE__, __LINE__);
-
+        
         // Draw each boid using it's individual position and rotation.
         for (const Boid & boid : Boids)
         {
@@ -420,14 +425,14 @@ void BoidController::DrawDebugLines(PE::Shader * shader, const PE::Mat4 & projec
 {
     // Draw each boid using it's individual position and rotation.
     PE::Mat4 transform_final = projection * GetTransform();
-
+    
     // Draw one mesh at a time to reduce uniform setting.
     for (const PE::Mesh & mesh : meshes)
     {
         glUniform4fv(shader->uObjectColor, 1, &color->R);
         glBindVertexArray(mesh.VAO);
         PE::Graphics::LogError(__FILE__, __LINE__);
-
+        
         // Draw each boid.
         for (const Boid & boid : Boids)
         {
@@ -442,33 +447,46 @@ void BoidController::DrawDebugLines(PE::Shader * shader, const PE::Mat4 & projec
 void BoidController::DrawDeferred(const PE::Shader * shader, const PE::Mat4 & projection, const PE::Vec3 & cam_position)
 {
     PE::Mat4 transform = projection * GetTransform();
-
+    
     glBindBuffer(GL_ARRAY_BUFFER, BoidDataBuffer);
     glBufferData(GL_ARRAY_BUFFER, Boids.size() * sizeof(glm::mat4), &BoidData[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+    
     PE::Mat4 model_inverse = glm::transpose(glm::inverse(GetTransform()));
-
-    // Draw one mesh at a time to reduce uniform setting.
-    for (const PE::Mesh & mesh : meshes)
+    glUniformMatrix4fv(shader->uTransform, 1, GL_FALSE, glm::value_ptr(transform));
+    
+    // Break boids into batches, one for each material type.
+    GLsizei batch_size = Boids.size() / (BoidMaterials.size() + 1);
+    GLsizei final_batch_size = Boids.size() - (batch_size * (BoidMaterials.size()));
+    
+    // Draw boids one material at a time.
+    for (int i = 0; i < BoidMaterials.size(); ++i)
     {
-        // Load in mesh data.
-        glUniform3fv(shader->uObjectColor, 1, &mesh.material.ambient.R);
-        glUniform3fv(shader->uDiffuse, 1, &mesh.material.diffuse.R);
-        glUniform3fv(shader->uSpecular, 1, &mesh.material.specular.R);
-        glUniform1f(shader->uShininess, mesh.material.shininess);
-        glUniformMatrix4fv(shader->uTransform, 1, GL_FALSE, glm::value_ptr(transform));
-        glBindVertexArray(mesh.VAO);
-        PE::Graphics::LogError(__FILE__, __LINE__);
-
-        // Draw all boids at once.
-        glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()),
-            GL_UNSIGNED_INT, nullptr, static_cast<GLsizei>(Boids.size()));
-        PE::Graphics::LogError(__FILE__, __LINE__);
-
-        glBindVertexArray(0);
+        auto material = BoidMaterials[i];
+        glUniform3fv(shader->uObjectColor, 1, &material.ambient.R);
+        glUniform3fv(shader->uDiffuse, 1, &material.diffuse.R);
+        glUniform3fv(shader->uSpecular, 1, &material.specular.R);
+        glUniform1f(shader->uShininess, material.shininess);
+        
+        for (const PE::Mesh & mesh : GetMeshes())
+        {
+            // Load in mesh data.
+            glBindVertexArray(mesh.VAO);
+            PE::Graphics::LogError(__FILE__, __LINE__);
+            
+            // Draw all boids at once.
+            if (&mesh == &GetMeshes().back())
+                glDrawElementsInstancedBaseInstance(GL_TRIANGLES, (GLsizei) mesh.indices.size(),
+                                                    GL_UNSIGNED_INT, nullptr, final_batch_size, i * batch_size);
+            else
+                glDrawElementsInstancedBaseInstance(GL_TRIANGLES, (GLsizei) mesh.indices.size(),
+                                                    GL_UNSIGNED_INT, nullptr, batch_size, i * batch_size);
+            PE::Graphics::LogError(__FILE__, __LINE__);
+            
+            glBindVertexArray(0);
+        }
     }
-
+    
     PE::Graphics::LogError(__FILE__, __LINE__);
 }
 
@@ -480,6 +498,16 @@ uint BoidController::GetNumBoids() const
 float BoidController::GetAreaSize() const
 {
     return area_size;
+}
+
+void BoidController::AddBoidMaterial(PE::Material new_material)
+{
+    BoidMaterials.push_back(new_material);
+}
+
+void BoidController::ClearBoidMaterials()
+{
+    BoidMaterials.clear();
 }
 
 bool BoidController::GridPos::operator==(const BoidController::GridPos & other)

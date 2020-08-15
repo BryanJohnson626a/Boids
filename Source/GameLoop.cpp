@@ -48,6 +48,12 @@ void GameInit(std::vector<std::string> cmd_args)
     }
     
     
+    // Center sphere.
+    bounding_sphere = new PE::Model("../Resources/Models/sphere.ply");
+    bounding_sphere->SetMaterial(PE::silver);
+    bounding_sphere->ResetRotation();
+    //PE::Graphics::GetInstance()->AddModel(bounding_sphere);
+    
     // Make first boid type.
     BoidsType1 = new BoidController("../Resources/Models/lpfish.obj");
     BoidsType1->AvoidFactor = 0.25f;
@@ -58,8 +64,9 @@ void GameInit(std::vector<std::string> cmd_args)
     BoidsType1->FearFactor = 100;
     BoidsType1->BoidScale = PE::Vec3{.15f};
     BoidsType1->SetNeighborDistance(2);
-    BoidsType1->SetMaterial(PE::turquoise);
     BoidsType1->AddBoids(num_boid1);
+    
+    BoidsType1->AddBoidMaterial(PE::white_plastic);
     
     PE::Graphics::GetInstance()->AddModel(BoidsType1);
     
@@ -79,12 +86,6 @@ void GameInit(std::vector<std::string> cmd_args)
     
     BoidsType1->AddFearedBoids(BoidsType2);
     
-    // Center sphere.
-    bounding_sphere = new PE::Model("../Resources/Models/sphere.ply");
-    bounding_sphere->SetScale(1);
-    bounding_sphere->SetMaterial(PE::silver);
-    //PE::Graphics::GetInstance()->AddModel(bounding_sphere);
-    
     // Set up Game UI
     game_ui = new GameUI();
     GameUI::SetInstance(game_ui);
@@ -95,18 +96,8 @@ void GameInit(std::vector<std::string> cmd_args)
 
 bool GameLoop(float dt)
 {
-    static int frame_counter = 0;
-    static float counter = 0;
     static float mouse_speed = 0.001f;
     static float cam_speed = 10;
-    ++frame_counter;
-    counter += dt;
-    if (counter >= 1)
-    {
-        std::cout << "FPS: " << frame_counter << std::endl;
-        frame_counter = 0;
-        counter -= 1;
-    }
     
     BoidsType1->Update(dt);
     BoidsType2->Update(dt);
@@ -171,6 +162,7 @@ bool GameLoop(float dt)
                             return false;
                         case SDLK_F1:
                             PE::Graphics::GetInstance()->debug_mode = 0;
+                            break;
                         case SDLK_F2:
                             PE::Graphics::GetInstance()->debug_mode = 1;
                             break;
@@ -188,7 +180,6 @@ bool GameLoop(float dt)
                             break;
                         case SDLK_F7:
                             PE::Graphics::GetInstance()->debug_mode = 6;
-                            break;
                             break;
                         case SDLK_F12:
                             PE::Graphics::GetInstance()->CompileShaders();
