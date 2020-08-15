@@ -55,7 +55,13 @@ public:
     float CohesionFactor = 1;
     float AreaFactor = 1;
     float FearFactor = 1;
+    
+    float Speed = 1;
+    float TurnForce = 1;
     PE::Vec3 BoidScale{1};
+    
+    bool HardContainer = true;
+    bool ContinuousContainer = false;
 
     // How many boids should recalculate their heading each frame.
     uint updates_per_frame = 1000;
@@ -71,6 +77,8 @@ public:
     void SetFearDistance(float distance);
     void SetNeighborDistance(float distance);
     void SetAreaSize(float size);
+    float GetAreaSize() const;
+    uint GetNumBoids() const;
 private:
     Boid MakeBoid();
     void PopulateGrid();
@@ -90,7 +98,7 @@ private:
     void UpdateNeighborSearchDistance();
 
     // The size of area boids try to stay within.
-    float AreaSize = 10;
+    float area_size = 10;
     float grid_offset = 0;
     float grid_size = 0;
     float neighbor_dist_squared = 1;
@@ -98,7 +106,6 @@ private:
     float fear_dist_squared = 25;
 
     std::vector<const BoidController *> FearedBoids;
-    float turnForce = 1;
     std::vector<Boid> Boids;
     std::vector<PE::Mat4> BoidData;
 

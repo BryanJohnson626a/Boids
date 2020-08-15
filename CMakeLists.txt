@@ -16,12 +16,14 @@ hunter_add_package(glew)
 hunter_add_package(glm)
 hunter_add_package(Assimp)
 hunter_add_package(soil)
+hunter_add_package(imgui)
 
 find_package(SDL2 CONFIG REQUIRED)
 find_package(glew CONFIG REQUIRED)
 find_package(glm REQUIRED)
 find_package(Assimp CONFIG REQUIRED)
 find_package(soil CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 set(PROJECT_SOURCE_FILES
         Source/Boids.cpp
@@ -42,7 +44,17 @@ set(PROJECT_SOURCE_FILES
         Source/Engine/Model.h
         Source/Engine/Transformable.cpp
         Source/Engine/Transformable.h
-        Source/Engine/Color.h Source/CustomTypes.h)
+        Source/Engine/Color.h
+        Source/CustomTypes.h
+        Source/Engine/UI.cpp
+        Source/Engine/UI.h
+        Source/Engine/imgui_impl_opengl3.cpp
+        Source/Engine/imgui_impl_opengl3.h
+        Source/Engine/imgui_impl_sdl.cpp
+        Source/Engine/imgui_impl_sdl.h
+        Source/GameUI.cpp
+        Source/GameUI.h
+        )
 
 add_executable(Boids ${PROJECT_SOURCE_FILES})
 
@@ -61,10 +73,8 @@ target_link_libraries(Boids PRIVATE
         glm
         Assimp::assimp
         soil::soil
+        imgui::imgui
         )
-add_custom_command(TARGET Boids POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_SOURCE_DIR}/Resources ${CMAKE_BINARY_DIR}/Resources DEPENDS ${CMAKE_BINARY_DIR}/Resources
-        COMMENT "Creating Resource folder symlink ${CMAKE_SOURCE_DIR}/Resources -> ${CMAKE_BINARY_DIR}/Resources")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")

@@ -7,6 +7,8 @@
 #include "GameLoop.h"
 #include "Engine/Dice.h"
 #include "Engine/Graphics.h"
+#include "Engine/imgui_impl_sdl.h"
+#include "GameUI.h"
 
 #ifndef NDEBUG
 const int DEFAULT_NUM_BOIDS = 1000;
@@ -22,10 +24,12 @@ BoidController * BoidsType1 = nullptr;
 BoidController * BoidsType2 = nullptr;
 PE::Model * bounding_sphere = nullptr;
 
+GameUI * game_ui = nullptr;
+
 void GameInit(std::vector<std::string> cmd_args)
 {
     int num_boid1, num_boid2;
-
+    
     if (cmd_args.size() == 2)
     {
         int total = std::stoi(cmd_args[1]);
@@ -42,44 +46,51 @@ void GameInit(std::vector<std::string> cmd_args)
         num_boid1 = int(std::floor(DEFAULT_NUM_BOIDS * RATIO));
         num_boid2 = int(std::ceil(DEFAULT_NUM_BOIDS * (1 - RATIO)));
     }
-
-
+    
+    
     // Make first boid type.
     BoidsType1 = new BoidController("../Resources/Models/lpfish.obj");
     BoidsType1->AvoidFactor = 0.25f;
     BoidsType1->AlignFactor = 1;
     BoidsType1->CohesionFactor = 1;
-    BoidsType1->AreaFactor = 1.f / 1000.f;
+    BoidsType1->AreaFactor = 1.f / 2000.f;
     BoidsType1->SetAreaSize(BOUNDS);
     BoidsType1->FearFactor = 100;
     BoidsType1->BoidScale = PE::Vec3{.15f};
     BoidsType1->SetNeighborDistance(2);
     BoidsType1->SetMaterial(PE::turquoise);
     BoidsType1->AddBoids(num_boid1);
-
+    
     PE::Graphics::GetInstance()->AddModel(BoidsType1);
-
+    
     // Make second boid type.
-    BoidsType2 = new BoidController("../Resources/Models/fish.obj");
+    BoidsType2 = new BoidController("../Resources/Models/lpfish.obj");
     BoidsType2->AvoidFactor = 2;
     BoidsType2->AlignFactor = 0.5f;
     BoidsType2->CohesionFactor = 2;
-    BoidsType2->AreaFactor = 1.f / 1000.f;
+    BoidsType2->AreaFactor = 1.f / 2000.f;
     BoidsType2->SetAreaSize(BOUNDS);
     BoidsType2->BoidScale = PE::Vec3{.75f};
     BoidsType2->SetNeighborDistance(5);
     BoidsType2->SetMaterial(PE::ruby);
     BoidsType2->AddBoids(num_boid2);
-
+    
     PE::Graphics::GetInstance()->AddModel(BoidsType2);
-
+    
     BoidsType1->AddFearedBoids(BoidsType2);
-
+    
     // Center sphere.
     bounding_sphere = new PE::Model("../Resources/Models/sphere.ply");
     bounding_sphere->SetScale(1);
     bounding_sphere->SetMaterial(PE::silver);
     //PE::Graphics::GetInstance()->AddModel(bounding_sphere);
+    
+    // Set up Game UI
+    game_ui = new GameUI();
+    GameUI::SetInstance(game_ui);
+    
+    game_ui->bc1 = BoidsType1;
+    game_ui->bc2 = BoidsType2;
 }
 
 bool GameLoop(float dt)
@@ -96,10 +107,10 @@ bool GameLoop(float dt)
         frame_counter = 0;
         counter -= 1;
     }
-
+    
     BoidsType1->Update(dt);
     BoidsType2->Update(dt);
-
+    
     auto keystate = SDL_GetKeyboardState(nullptr);
     if (keystate[SDL_SCANCODE_W] || keystate[SDL_SCANCODE_UP])
         PE::Graphics::GetInstance()->MoveCameraRelative(
@@ -119,86 +130,78 @@ bool GameLoop(float dt)
     if (keystate[SDL_SCANCODE_LSHIFT] || keystate[SDL_SCANCODE_E])
         PE::Graphics::GetInstance()->MoveCameraRelative(
                 PE::Vec3{0, 0, -dt * cam_speed});
-
+    
     SDL_Event e;
     while (SDL_PollEvent(&e))
     {
-
-        switch (e.type)
-        {
-            case SDL_MOUSEMOTION:
+        ImGui_ImplSDL2_ProcessEvent(&e);
+        
+        ImGuiIO & io = ImGui::GetIO();
+        
+        if (!io.WantCaptureMouse)
+            switch (e.type)
             {
-                // First person camera movement. Only rotate with the mouse if relative mouse mode is active.
-                // Also skip the first frame of movement since it's always some high value.
-                static bool first_frame = true;
-                if (SDL_GetRelativeMouseMode() && !first_frame)
+                case SDL_MOUSEMOTION:
                 {
-                    auto facing = PE::Graphics::GetInstance()->cam_facing;
-                    auto relative_horizontal = glm::normalize(glm::cross(facing, PE::Up));
-                    PE::Graphics::GetInstance()->RotateCamera(-e.motion.xrel * mouse_speed, PE::Up);
-                    PE::Graphics::GetInstance()->RotateCamera(-e.motion.yrel * mouse_speed,
-                                                              relative_horizontal);
+                    // First person camera movement. Only rotate with the mouse if relative mouse mode is active.
+                    // Also skip the first frame of movement since it's always some high value.
+                    static bool first_frame = true;
+                    if (SDL_GetRelativeMouseMode() && !first_frame)
+                    {
+                        auto facing = PE::Graphics::GetInstance()->cam_facing;
+                        auto relative_horizontal = glm::normalize(glm::cross(facing, PE::Up));
+                        PE::Graphics::GetInstance()->RotateCamera(-e.motion.xrel * mouse_speed, PE::Up);
+                        PE::Graphics::GetInstance()->RotateCamera(-e.motion.yrel * mouse_speed,
+                                                                  relative_horizontal);
+                    }
+                    else first_frame = false;
                 }
-                else first_frame = false;
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    SDL_SetRelativeMouseMode(SDL_TRUE);
+                    break;
+                case SDL_MOUSEBUTTONUP:
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                    break;
+                
+                case SDL_KEYDOWN:
+                    switch (e.key.keysym.sym)
+                    {
+                        case SDLK_ESCAPE:
+                            return false;
+                        case SDLK_F1:
+                            PE::Graphics::GetInstance()->debug_mode = 0;
+                        case SDLK_F2:
+                            PE::Graphics::GetInstance()->debug_mode = 1;
+                            break;
+                        case SDLK_F3:
+                            PE::Graphics::GetInstance()->debug_mode = 2;
+                            break;
+                        case SDLK_F4:
+                            PE::Graphics::GetInstance()->debug_mode = 3;
+                            break;
+                        case SDLK_F5:
+                            PE::Graphics::GetInstance()->debug_mode = 4;
+                            break;
+                        case SDLK_F6:
+                            PE::Graphics::GetInstance()->debug_mode = 5;
+                            break;
+                        case SDLK_F7:
+                            PE::Graphics::GetInstance()->debug_mode = 6;
+                            break;
+                            break;
+                        case SDLK_F12:
+                            PE::Graphics::GetInstance()->CompileShaders();
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case SDL_QUIT:
+                    return false;
+                default:
+                    break;
             }
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                SDL_SetRelativeMouseMode(SDL_TRUE);
-                break;
-            case SDL_MOUSEBUTTONUP:
-                SDL_SetRelativeMouseMode(SDL_FALSE);
-                break;
-
-            case SDL_KEYDOWN:
-                switch (e.key.keysym.sym)
-                {
-                    case SDLK_ESCAPE:
-                        return false;
-                    case SDLK_1:
-                        BoidsType1->RemoveBoids(100);
-                        break;
-                    case SDLK_2:
-                        BoidsType1->AddBoids(100);
-                        break;
-                    case SDLK_3:
-                        BoidsType2->RemoveBoids(10);
-                        break;
-                    case SDLK_4:
-                        BoidsType2->AddBoids(10);
-                        break;
-                    case SDLK_F1:
-                        PE::Graphics::GetInstance()->debug_mode = 0;
-                    case SDLK_F2:
-                        PE::Graphics::GetInstance()->debug_mode = 1;
-                        break;
-                    case SDLK_F3:
-                        PE::Graphics::GetInstance()->debug_mode = 2;
-                        break;
-                    case SDLK_F4:
-                        PE::Graphics::GetInstance()->debug_mode = 3;
-                        break;
-                    case SDLK_F5:
-                        PE::Graphics::GetInstance()->debug_mode = 4;
-                        break;
-                    case SDLK_F6:
-                        PE::Graphics::GetInstance()->debug_mode = 5;
-                        break;
-                    case SDLK_F7:
-                        PE::Graphics::GetInstance()->debug_mode = 6;
-                        break;
-                        break;
-                    case SDLK_F12:
-                        PE::Graphics::GetInstance()->CompileShaders();
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case SDL_QUIT:
-                return false;
-            default:
-                break;
-        }
     }
     return true;
 }

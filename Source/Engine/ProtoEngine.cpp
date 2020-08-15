@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 
+#define SDL_MAIN_HANDLED
 #include "Graphics.h"
 #include "../GameLoop.h"
 

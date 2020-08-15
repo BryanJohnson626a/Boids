@@ -32,123 +32,123 @@ namespace PE
     const Color YELLOW{1,1,0,1};
     const Color MAGENTA{1,0,1,1};
 
-    const Material emerald{Color{0.0215, 0.1745, 0.0215},
-                           Color{0.07568, 0.61424, 0.07568},
-                           Color{0.633, 0.727811, 0.633},
-                           0.6};
+    const Material emerald{Color{0.0215f, 0.1745f, 0.0215f},
+                           Color{0.07568f, 0.61424f, 0.07568f},
+                           Color{0.633f, 0.727811f, 0.633f},
+                           0.6f};
 
-    const Material jade{Color{0.135, 0.2225, 0.1575},
-                        Color{0.54, 0.89, 0.63},
-                        Color{0.316228, 0.316228, 0.316228},
-                        0.1};
+    const Material jade{Color{0.135f, 0.2225f, 0.1575f},
+                        Color{0.54f, 0.89f, 0.63f},
+                        Color{0.316228f, 0.316228f, 0.316228f},
+                        0.1f};
 
-    const Material obsidian{Color{0.05375, 0.05, 0.06625},
-                            Color{0.18275, 0.17, 0.22525},
-                            Color{0.332741, 0.328634, 0.346435},
-                            0.3};
+    const Material obsidian{Color{0.05375f, 0.05f, 0.06625f},
+                            Color{0.18275f, 0.17f, 0.22525f},
+                            Color{0.332741f, 0.328634f, 0.346435f},
+                            0.3f};
 
-    const Material pearl{Color{0.25, 0.20725, 0.20725},
-                         Color{1, 0.829, 0.829},
-                         Color{0.296648, 0.296648, 0.296648},
-                         0.088};
+    const Material pearl{Color{0.25f, 0.20725f, 0.20725f},
+                         Color{1.f, 0.829f, 0.829f},
+                         Color{0.296648f, 0.296648f, 0.296648f},
+                         0.088f};
 
-    const Material ruby{Color{0.1745, 0.01175, 0.01175},
-                        Color{0.61424, 0.04136, 0.04136},
-                        Color{0.727811, 0.626959, 0.626959},
-                        0.6};
+    const Material ruby{Color{0.1745f, 0.01175f, 0.01175f},
+                        Color{0.61424f, 0.04136f, 0.04136f},
+                        Color{0.727811f, 0.626959f, 0.626959f},
+                        0.6f};
 
-    const Material turquoise{Color{0.1, 0.18725, 0.1745},
-                             Color{0.396, 0.74151, 0.69102},
-                             Color{0.297254, 0.30829, 0.306678},
-                             0.1};
+    const Material turquoise{Color{0.1f, 0.18725f, 0.1745f},
+                             Color{0.396f, 0.74151f, 0.69102f},
+                             Color{0.297254f, 0.30829f, 0.306678f},
+                             0.1f};
 
-    const Material brass{Color{0.329412, 0.223529, 0.027451},
-                         Color{0.780392, 0.568627, 0.113725},
-                         Color{0.992157, 0.941176, 0.807843},
-                         0.21794872};
+    const Material brass{Color{0.329412f, 0.223529f, 0.027451f},
+                         Color{0.780392f, 0.568627f, 0.113725f},
+                         Color{0.992157f, 0.941176f, 0.807843f},
+                         0.21794872f};
 
-    const Material bronze{Color{0.2125, 0.1275, 0.054},
-                          Color{0.714, 0.4284, 0.18144},
-                          Color{0.393548, 0.271906, 0.166721},
-                          0.2};
+    const Material bronze{Color{0.2125f, 0.1275f, 0.054f},
+                          Color{0.714f, 0.4284f, 0.18144f},
+                          Color{0.393548f, 0.271906f, 0.166721f},
+                          0.2f};
 
-    const Material chrome{Color{0.25, 0.25, 0.25},
-                          Color{0.4, 0.4, 0.4},
-                          Color{0.774597, 0.774597, 0.774597},
-                          0.6};
+    const Material chrome{Color{0.25f, 0.25f, 0.25f},
+                          Color{0.4f, 0.4f, 0.4f},
+                          Color{0.774597f, 0.774597f, 0.774597f},
+                          0.6f};
 
-    const Material copper{Color{0.19125, 0.0735, 0.0225},
-                          Color{0.7038, 0.27048, 0.0828},
-                          Color{0.256777, 0.137622, 0.086014},
-                          0.1};
+    const Material copper{Color{0.19125f, 0.0735f, 0.0225f},
+                          Color{0.7038f, 0.27048f, 0.0828f},
+                          Color{0.256777f, 0.137622f, 0.086014f},
+                          0.1f};
 
-    const Material gold{Color{0.24725, 0.1995, 0.0745},
-                        Color{0.75164, 0.60648, 0.22648},
-                        Color{0.628281, 0.555802, 0.366065},
-                        0.4};
+    const Material gold{Color{0.24725f, 0.1995f, 0.0745f},
+                        Color{0.75164f, 0.60648f, 0.22648f},
+                        Color{0.628281f, 0.555802f, 0.366065f},
+                        0.4f};
 
-    const Material silver{Color{0.19225, 0.19225, 0.19225},
-                          Color{0.50754, 0.50754, 0.50754},
-                          Color{0.508273, 0.508273, 0.508273},
-                          0.4};
+    const Material silver{Color{0.19225f, 0.19225f, 0.19225f},
+                          Color{0.50754f, 0.50754f, 0.50754f},
+                          Color{0.508273f, 0.508273f, 0.508273f},
+                          0.4f};
 
-    const Material black_plastic{Color{0.0, 0.0, 0.0},
-                                 Color{0.01, 0.01, 0.01},
-                                 Color{0.50, 0.50, 0.50},
-                                 .25};
+    const Material black_plastic{Color{0.0f, 0.0f, 0.0f},
+                                 Color{0.01f, 0.01f, 0.01f},
+                                 Color{0.50f, 0.50f, 0.50f},
+                                 .25f};
 
-    const Material cyan_plastic{Color{0.0, 0.1, 0.06},
-                                Color{0.0, 0.50980392, 0.50980392},
-                                Color{0.50196078, 0.50196078, 0.50196078},
-                                .25};
+    const Material cyan_plastic{Color{0.0f, 0.1f, 0.06f},
+                                Color{0.0f, 0.50980392f, 0.50980392f},
+                                Color{0.50196078f, 0.50196078f, 0.50196078f},
+                                .25f};
 
-    const Material green_plastic{Color{0.0, 0.0, 0.0},
-                                 Color{0.1, 0.35, 0.1},
-                                 Color{0.45, 0.55, 0.45},
-                                 .25};
+    const Material green_plastic{Color{0.0f, 0.0f, 0.0f},
+                                 Color{0.1f, 0.35f, 0.1f},
+                                 Color{0.45f, 0.55f, 0.45f},
+                                 .25f};
 
-    const Material red_plastic{Color{0.0, 0.0, 0.0},
-                               Color{0.5, 0.0, 0.0},
-                               Color{0.7, 0.6, 0.6},
-                               .25};
+    const Material red_plastic{Color{0.0f, 0.0f, 0.0f},
+                               Color{0.5f, 0.0f, 0.0f},
+                               Color{0.7f, 0.6f, 0.6f},
+                               .25f};
 
-    const Material white_plastic{Color{0.0, 0.0, 0.0},
-                                 Color{0.55, 0.55, 0.55},
-                                 Color{0.70, 0.70, 0.70},
-                                 .25};
+    const Material white_plastic{Color{0.0f, 0.0f, 0.0f},
+                                 Color{0.55f, 0.55f, 0.55f},
+                                 Color{0.70f, 0.70f, 0.70f},
+                                 .25f};
 
-    const Material yellow_plastic{Color{0.0, 0.0, 0.0},
-                                  Color{0.5, 0.5, 0.0},
-                                  Color{0.60, 0.60, 0.50},
-                                  .25};
+    const Material yellow_plastic{Color{0.0f, 0.0f, 0.0f},
+                                  Color{0.5f, 0.5f, 0.0f},
+                                  Color{0.60f, 0.60f, 0.50f},
+                                  .25f};
 
-    const Material black_rubber{Color{0.02, 0.02, 0.02},
-                                Color{0.01, 0.01, 0.01},
-                                Color{0.4, 0.4, 0.4},
-                                .078125};
+    const Material black_rubber{Color{0.02f, 0.02f, 0.02f},
+                                Color{0.01f, 0.01f, 0.01f},
+                                Color{0.4f, 0.4f, 0.4f},
+                                .078125f};
 
-    const Material cyan_rubber{Color{0.0, 0.05, 0.05},
-                               Color{0.4, 0.5, 0.5},
-                               Color{0.04, 0.7, 0.7},
-                               .078125};
+    const Material cyan_rubber{Color{0.0f, 0.05f, 0.05f},
+                               Color{0.4f, 0.5f, 0.5f},
+                               Color{0.04f, 0.7f, 0.7f},
+                               .078125f};
 
-    const Material green_rubber{Color{0.0, 0.05, 0.0},
-                                Color{0.4, 0.5, 0.4},
-                                Color{0.04, 0.7, 0.04},
-                                .078125};
+    const Material green_rubber{Color{0.0f, 0.05f, 0.0f},
+                                Color{0.4f, 0.5f, 0.4f},
+                                Color{0.04f, 0.7f, 0.04f},
+                                .078125f};
 
-    const Material red_rubber{Color{0.05, 0.0, 0.0},
-                              Color{0.5, 0.4, 0.4},
-                              Color{0.7, 0.04, 0.04},
-                              .078125};
+    const Material red_rubber{Color{0.05f, 0.0f, 0.0f},
+                              Color{0.5f, 0.4f, 0.4f},
+                              Color{0.7f, 0.04f, 0.04f},
+                              .078125f};
 
-    const Material white_rubber{Color{0.05, 0.05, 0.05},
-                                Color{0.5, 0.5, 0.5},
-                                Color{0.7, 0.7, 0.7},
-                                .078125};
+    const Material white_rubber{Color{0.05f, 0.05f, 0.05f},
+                                Color{0.5f, 0.5f, 0.5f},
+                                Color{0.7f, 0.7f, 0.7f},
+                                .078125f};
 
-    const Material yellow_rubber{Color{0.05, 0.05, 0.0},
-                                 Color{0.5, 0.5, 0.4},
-                                 Color{0.7, 0.7, 0.04},
-                                 .078125};
+    const Material yellow_rubber{Color{0.05f, 0.05f, 0.0f},
+                                 Color{0.5f, 0.5f, 0.4f},
+                                 Color{0.7f, 0.7f, 0.04f},
+                                 .078125f};
 }

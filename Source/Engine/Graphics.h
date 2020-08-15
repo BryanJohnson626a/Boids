@@ -106,7 +106,7 @@ namespace PE
 
         void RecalcWTNDC();
 
-        SDL_Window* window;
+        SDL_Window * window;
         std::string title;
         int window_size_x;
         int window_size_y;

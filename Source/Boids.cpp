@@ -22,15 +22,15 @@ BoidController::BoidController(std::string_view path) : Model(path)
         unsigned int VAO = mesh.VAO;
         glBindVertexArray(VAO);
         // vertex attributes
-        std::size_t vec4Size = sizeof(glm::vec4);
+        GLsizei vec4Size = sizeof(glm::vec4);
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) 0);
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) (1 * vec4Size));
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) static_cast<unsigned long long>(1 * vec4Size));
         glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) (2 * vec4Size));
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) static_cast<unsigned long long>(2 * vec4Size));
         glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) (3 * vec4Size));
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *) static_cast<unsigned long long>(3 * vec4Size));
 
         glVertexAttribDivisor(3, 1);
         glVertexAttribDivisor(4, 1);
@@ -51,9 +51,9 @@ void BoidController::AddBoids(uint num)
 
     BoidData.resize(Boids.size());
 
-    updates_per_frame = Boids.size() / 2;
-    grid_updates_per_frame = Boids.size() / 32;
-    populates_per_frame = Boids.size() / 120;
+    updates_per_frame = static_cast<uint>(Boids.size() / 2);
+    grid_updates_per_frame = static_cast<uint>(Boids.size() / 32);
+    populates_per_frame = static_cast<uint>(Boids.size() / 120);
 
     // Place all boids in their appropriate grid position.
     PopulateGrid();
@@ -95,7 +95,7 @@ void BoidController::Update(float dt)
         boids_checked = 0;
         boids_added = 0;
     }
-    for (int i = 0; i < populates_per_frame; ++i)
+    for (uint i = 0; i < populates_per_frame; ++i)
     {
         populates_counter = (populates_counter + 1) % Boids.size();
         PopulateNeighbors(Boids[populates_counter]);
@@ -107,20 +107,20 @@ void BoidController::Update(float dt)
         std::cout << (float) boids_added / (float) populates_per_frame << std::endl;
     }
 
-    for (int i = 0; i < updates_per_frame; ++i)
+    for (uint i = 0; i < updates_per_frame; ++i)
     {
         updates_counter = (updates_counter + 1) % Boids.size();
         UpdateForce(Boids[updates_counter]);
     }
 
-    for (int i = 0; i < Boids.size(); ++i)
+    for (uint i = 0; i < Boids.size(); ++i)
     {
         MoveBoid(Boids[i], dt);
         UpdateTransform(Boids[i], BoidData[i]);
     }
 
     //grid_positions_changed = 0;
-    for (int i = 0; i < grid_updates_per_frame; ++i)
+    for (uint i = 0; i < grid_updates_per_frame; ++i)
     {
         grid_updates_counter = (grid_updates_counter + 1) % Boids.size();
         UpdateGridPosition(grid_updates_counter);
@@ -151,11 +151,11 @@ void BoidController::PopulateNeighbors(Boid & boid)
     auto position = GetGridPosition(boid.position);
 
     // Check for neighbors in grid cubes near the boid's.
-    for (int x = std::max((int) position.x - neighbor_search_distance, 0);
+    for (uint x = std::max((int) position.x - neighbor_search_distance, 0);
          x < std::min(position.x + neighbor_search_distance, GRID_SIZE); ++x)
-        for (int y = std::max((int) position.y - neighbor_search_distance, 0);
+        for (uint y = std::max((int) position.y - neighbor_search_distance, 0);
              y < std::min(position.y + neighbor_search_distance, GRID_SIZE); ++y)
-            for (int z = std::max((int) position.z - neighbor_search_distance, 0);
+            for (uint z = std::max((int) position.z - neighbor_search_distance, 0);
                  z < std::min(position.z + neighbor_search_distance, GRID_SIZE); ++z)
             {
                 if (OUT_NEIGHBOR_CHECK_INFO) ++grids_checked;
@@ -209,9 +209,14 @@ void BoidController::MoveBoid(Boid & boid, float dt)
 {
     // Add the force to shift the direction of the velocity toward where the boid
     // wants to go, then scale that velocity to move speed.
-    boid.velocity += boid.force * turnForce * dt;
-    boid.velocity = glm::normalize(boid.velocity) * boid.speed;
+    boid.velocity += boid.force * TurnForce * dt;
+    boid.velocity = glm::normalize(boid.velocity) * boid.speed * Speed;
 
+    if (ContinuousContainer && glm::length(boid.position) > area_size * 1.5f)
+        boid.position *= -1;
+    if (HardContainer && glm::length(boid.position) > area_size * 1.5f)
+        boid.position = glm::normalize(boid.position) * area_size * 1.5f;
+    
     // Update position.
     boid.position += boid.velocity * dt;
 }
@@ -251,12 +256,12 @@ PE::Vector RandomVec()
 BoidController::Boid BoidController::MakeBoid()
 {
     // Random generators for use in this function only.
-    static DieReal PosDie(-30, 30);
+    static DieReal PosDie(-1, 1);
     static DieReal SpeedDie(1, 2);
 
     // Create boid with random location and velocity.
     Boid NewBoid;
-    NewBoid.position = PE::Vector{PosDie.Roll(), PosDie.Roll(), PosDie.Roll()};
+    NewBoid.position = PE::Vector{PosDie.Roll(), PosDie.Roll(), PosDie.Roll()} * area_size;
     NewBoid.velocity = RandomVec();
     NewBoid.velocity = glm::normalize(NewBoid.velocity);
     NewBoid.speed = SpeedDie.Roll();
@@ -310,7 +315,7 @@ void BoidController::SetNeighborDistance(float distance)
 
 void BoidController::SetAreaSize(float size)
 {
-    AreaSize = size;
+    area_size = size;
     grid_offset = size * 1.2f;
     grid_size = size * 2.4f;
 
@@ -321,7 +326,7 @@ void BoidController::UpdateNeighborSearchDistance()
 {
     float distance = std::sqrt(neighbor_dist_squared);
     float grid_width = (grid_size / (float) GRID_SIZE);
-    neighbor_search_distance = std::floor(distance / grid_width);
+    neighbor_search_distance = static_cast<int>(std::floor(distance / grid_width));
 }
 
 
@@ -382,7 +387,7 @@ PE::Vector BoidController::FearVector(const BoidController::Boid & boid) const
 PE::Vector BoidController::AreaVector(const Boid & boid) const
 {
     // Gently nudge boids in if they get too far
-    return -boid.position * std::max((glm::length(boid.position) - AreaSize), 0.0f);
+    return -boid.position * std::max((glm::length(boid.position) - area_size), 0.0f);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -457,13 +462,24 @@ void BoidController::DrawDeferred(const PE::Shader * shader, const PE::Mat4 & pr
         PE::Graphics::LogError(__FILE__, __LINE__);
 
         // Draw all boids at once.
-        glDrawElementsInstanced(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr, Boids.size());
+        glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()),
+            GL_UNSIGNED_INT, nullptr, static_cast<GLsizei>(Boids.size()));
         PE::Graphics::LogError(__FILE__, __LINE__);
 
         glBindVertexArray(0);
     }
 
     PE::Graphics::LogError(__FILE__, __LINE__);
+}
+
+uint BoidController::GetNumBoids() const
+{
+    return Boids.size();
+}
+
+float BoidController::GetAreaSize() const
+{
+    return area_size;
 }
 
 bool BoidController::GridPos::operator==(const BoidController::GridPos & other)

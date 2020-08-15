@@ -29,8 +29,8 @@ namespace PE
     const Vec3 South{-1, 0, 0};
     const Vec3 West{0, -1, 0};
 
-    class Texture;
-    class Shader;
+    struct Texture;
+    struct Shader;
     class Model;
     class Mesh;
 
