@@ -9,6 +9,7 @@ be manipulated easily with existing functions.
 */
 #pragma once
 
+#include <string>
 #include "Types.h"
 
 namespace PE
@@ -68,6 +69,8 @@ namespace PE
 
         void ValidateTransform();
         void CopyTransform(const Transformable & other);
+        
+        std::string Name;
 
     protected:
 

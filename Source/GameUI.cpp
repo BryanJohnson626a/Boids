@@ -12,6 +12,7 @@ const float AlignScale = 2.f;
 const float CohesionScale = 2.f;
 const float AreaScale = 4000.f;
 const float SpeedScale = 1.f;
+const float FearScale = .000002f;
 const float TurnForceScale = 1.f;
 
 
@@ -65,6 +66,98 @@ void SetColorsRubber(BoidController * bc)
     bc->AddBoidMaterial(PE::yellow_rubber);
 }
 
+void DisplayBoidUI(BoidController * bc)
+{
+    // Imgui requires a unique label for every button/slider/etc.
+    // If two bcs share a name they will control each other's buttons.
+    std::string uid = bc->Name;
+    
+    std::string label = bc->Name + " settings";
+    ImGui::Text("%s", label.c_str());
+    
+    int num_boids = bc->GetNumBoids();
+    label = "# of Boids##" + uid;
+    ImGui::SliderInt(label.c_str(), &num_boids, 0, 100000);
+    int diff = num_boids - (int) bc->GetNumBoids();
+    if (diff > 0)
+        bc->AddBoids(diff);
+    else if (diff < 0)
+        bc->RemoveBoids(-diff);
+    
+    ImGui::Text("Boid Behavior");
+    
+    float scaled_avoid_factor = bc->AvoidFactor * AvoidScale;
+    label = "Avoidance##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_avoid_factor, 0, 10);
+    bc->AvoidFactor = scaled_avoid_factor / AvoidScale;
+    
+    float scaled_align_factor = bc->AlignFactor * AlignScale;
+    label = "Alignment##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_align_factor, 0, 10);
+    bc->AlignFactor = scaled_align_factor / AlignScale;
+    
+    float scaled_cohesion_factor = bc->CohesionFactor * CohesionScale;
+    label = "Cohesion##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_cohesion_factor, 0, 10);
+    bc->CohesionFactor = scaled_cohesion_factor / CohesionScale;
+    
+    float scaled_fear_factor = bc->FearFactor * FearScale;
+    label = "Fear##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_fear_factor, -10, 10);
+    bc->FearFactor = scaled_fear_factor / FearScale;
+    
+    float scaled_area_factor = bc->AreaFactor * AreaScale;
+    label = "Containment##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_area_factor, 0, 10);
+    bc->AreaFactor = scaled_area_factor / AreaScale;
+    
+    ImGui::Text("Boid Properties");
+    
+    float scaled_speed = bc->Speed * SpeedScale;
+    label = "Speed##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_speed, 0.01, 10);
+    bc->Speed = scaled_speed / SpeedScale;
+    
+    float scaled_turn_force = bc->TurnForce * TurnForceScale;
+    label = "Maneuver##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_turn_force, 0.01, 10);
+    bc->TurnForce = scaled_turn_force / TurnForceScale;
+    
+    ImGui::Text("Boid Colors");
+    label = "White##" + uid;
+    if (ImGui::Button(label.c_str()))
+        SetColorsWhite(bc);
+    ImGui::SameLine();
+    label = "Plastic##" + uid;
+    if (ImGui::Button(label.c_str()))
+        SetColorsPlastic(bc);
+    ImGui::SameLine();
+    label = "Rubber##" + uid;
+    if (ImGui::Button(label.c_str()))
+        SetColorsRubber(bc);
+    ImGui::SameLine();
+    label = "Metal##" + uid;
+    if (ImGui::Button(label.c_str()))
+        SetColorsMetal(bc);
+    ImGui::SameLine();
+    label = "Gemstone##" + uid;
+    if (ImGui::Button(label.c_str()))
+        SetColorsGemstone(bc);
+    
+    ImGui::Text("Container");
+    
+    label = "Continuous##" + uid;
+    ImGui::Checkbox(label.c_str(), &bc->ContinuousContainer);
+    ImGui::SameLine();
+    label = "Hard Barrier##" + uid;
+    ImGui::Checkbox(label.c_str(), &bc->HardContainer);
+    
+    float scaled_area_size = bc->GetAreaSize() * AreaSizeScale;
+    label = "Size##" + uid;
+    ImGui::SliderFloat(label.c_str(), &scaled_area_size, 0.01, 10);
+    bc->SetAreaSize(scaled_area_size / AreaSizeScale);
+}
+
 void GameUI::UpdateGameUI()
 {
     static std::vector<float> FPS(100, 60);
@@ -84,74 +177,11 @@ void GameUI::UpdateGameUI()
     
     ImGui::Text("Average performance: %.1f ms/frame (%.1f FPS)", 1000.f / avg_fps, avg_fps);
     
-    ImGui::Separator();
-    ImGui::Text("Container Settings");
-    
-    ImGui::Checkbox("Continuous", &bc1->ContinuousContainer);
-    ImGui::SameLine();
-    ImGui::Checkbox("Hard Barrier", &bc1->HardContainer);
-    
-    float scaled_area_size = bc1->GetAreaSize() * AreaSizeScale;
-    ImGui::SliderFloat("Size", &scaled_area_size, 0.01, 10);
-    bc1->SetAreaSize(scaled_area_size / AreaSizeScale);
-    
-    ImGui::Separator();
-    ImGui::Text("Boid Type 1");
-    
-    int num_boids = bc1->GetNumBoids();
-    ImGui::SliderInt("# of Boids", &num_boids, 0, 100000);
-    int diff = num_boids - (int) bc1->GetNumBoids();
-    if (diff > 0)
-        bc1->AddBoids(diff);
-    else if (diff < 0)
-        bc1->RemoveBoids(-diff);
-    
-    ImGui::Separator();
-    ImGui::Text("Boid Behavior");
-    
-    float scaled_avoid_factor = bc1->AvoidFactor * AvoidScale;
-    ImGui::SliderFloat("Avoidance", &scaled_avoid_factor, 0, 10);
-    bc1->AvoidFactor = scaled_avoid_factor / AvoidScale;
-    
-    float scaled_align_factor = bc1->AlignFactor * AlignScale;
-    ImGui::SliderFloat("Alignment", &scaled_align_factor, 0, 10);
-    bc1->AlignFactor = scaled_align_factor / AlignScale;
-    
-    float scaled_cohesion_factor = bc1->CohesionFactor * CohesionScale;
-    ImGui::SliderFloat("Cohesion", &scaled_cohesion_factor, 0, 10);
-    bc1->CohesionFactor = scaled_cohesion_factor / CohesionScale;
-    
-    float scaled_area_factor = bc1->AreaFactor * AreaScale;
-    ImGui::SliderFloat("Containment", &scaled_area_factor, 0, 10);
-    bc1->AreaFactor = scaled_area_factor / AreaScale;
-    
-    ImGui::Separator();
-    
-    ImGui::Text("Boid Properties");
-    
-    float scaled_speed = bc1->Speed * SpeedScale;
-    ImGui::SliderFloat("Speed", &scaled_speed, 0.01, 10);
-    bc1->Speed = scaled_speed / SpeedScale;
-    
-    float scaled_turn_force = bc1->TurnForce * TurnForceScale;
-    ImGui::SliderFloat("Maneuver", &scaled_turn_force, 0.01, 10);
-    bc1->TurnForce = scaled_turn_force / TurnForceScale;
-    
-    ImGui::Text("Boid Colors");
-    if (ImGui::Button("White"))
-        SetColorsWhite(bc1);
-    ImGui::SameLine();
-    if (ImGui::Button("Plastic"))
-        SetColorsPlastic(bc1);
-    ImGui::SameLine();
-    if (ImGui::Button("Rubber"))
-        SetColorsRubber(bc1);
-    ImGui::SameLine();
-    if (ImGui::Button("Metal"))
-        SetColorsMetal(bc1);
-    ImGui::SameLine();
-    if (ImGui::Button("Gemstone"))
-        SetColorsGemstone(bc1);
+    for (auto * bc : BoidControllers)
+    {
+        ImGui::Separator();
+        DisplayBoidUI(bc);
+    }
     
 }
 

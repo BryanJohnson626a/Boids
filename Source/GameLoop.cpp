@@ -14,84 +14,64 @@
 const int DEFAULT_NUM_BOIDS = 1000;
 const float BOUNDS = 10;
 #else
-const int DEFAULT_NUM_BOIDS = 40000;
+const int DEFAULT_NUM_BOIDS = 50000;
+const int DEFAULT_NUM_BOIDS2 = 10;
 const float BOUNDS = 60;
 #endif
 
 const float RATIO = 1;
 
-BoidController * BoidsType1 = nullptr;
-BoidController * BoidsType2 = nullptr;
+std::vector<BoidController *> BoidControllers;
 PE::Model * bounding_sphere = nullptr;
 
 GameUI * game_ui = nullptr;
 
 void GameInit(std::vector<std::string> cmd_args)
 {
-    int num_boid1, num_boid2;
-    
-    if (cmd_args.size() == 2)
-    {
-        int total = std::stoi(cmd_args[1]);
-        num_boid1 = static_cast<int>(std::floor((float) total * RATIO));
-        num_boid2 = static_cast<int>(std::ceil((float) total * (1 - RATIO)));
-    }
-    else if (cmd_args.size() == 3)
-    {
-        num_boid1 = std::stoi(cmd_args[1]);
-        num_boid2 = std::stoi(cmd_args[2]);
-    }
-    else
-    {
-        num_boid1 = int(std::floor(DEFAULT_NUM_BOIDS * RATIO));
-        num_boid2 = int(std::ceil(DEFAULT_NUM_BOIDS * (1 - RATIO)));
-    }
-    
+    // Set up Game UI
+    game_ui = new GameUI();
+    GameUI::SetInstance(game_ui);
     
     // Center sphere.
-    bounding_sphere = new PE::Model("../Resources/Models/sphere.ply");
-    bounding_sphere->SetMaterial(PE::silver);
-    bounding_sphere->ResetRotation();
+    //bounding_sphere = new PE::Model("../Resources/Models/sphere.ply");
+    //bounding_sphere->SetMaterial(PE::silver);
+    //bounding_sphere->ResetRotation();
     //PE::Graphics::GetInstance()->AddModel(bounding_sphere);
     
     // Make first boid type.
-    BoidsType1 = new BoidController("../Resources/Models/lpfish.obj");
+    BoidController * BoidsType1 = new BoidController("../Resources/Models/lpfish.obj");
+    BoidsType1->Name = "Boid Type 1";
     BoidsType1->AvoidFactor = 0.25f;
     BoidsType1->AlignFactor = 1;
     BoidsType1->CohesionFactor = 1;
     BoidsType1->AreaFactor = 1.f / 2000.f;
     BoidsType1->SetAreaSize(BOUNDS);
-    BoidsType1->FearFactor = 100;
+    BoidsType1->FearFactor = 1000000;
     BoidsType1->BoidScale = PE::Vec3{.15f};
     BoidsType1->SetNeighborDistance(2);
-    BoidsType1->AddBoids(num_boid1);
-    
-    BoidsType1->AddBoidMaterial(PE::white_plastic);
-    
+    BoidsType1->AddBoids(DEFAULT_NUM_BOIDS);
+    BoidsType1->AddBoidMaterial(PE::cyan_plastic);
     PE::Graphics::GetInstance()->AddModel(BoidsType1);
+    game_ui->BoidControllers.emplace_back(BoidsType1);
     
     // Make second boid type.
-    BoidsType2 = new BoidController("../Resources/Models/lpfish.obj");
-    BoidsType2->AvoidFactor = 2;
-    BoidsType2->AlignFactor = 0.5f;
-    BoidsType2->CohesionFactor = 2;
+    BoidController * BoidsType2 = new BoidController("../Resources/Models/lpfish.obj");
+    BoidsType2->Name = "Boid Type 2";
+    BoidsType2->AvoidFactor = 0.25f;
+    BoidsType2->AlignFactor = 1;
+    BoidsType2->CohesionFactor = 1;
     BoidsType2->AreaFactor = 1.f / 2000.f;
     BoidsType2->SetAreaSize(BOUNDS);
-    BoidsType2->BoidScale = PE::Vec3{.75f};
-    BoidsType2->SetNeighborDistance(5);
-    BoidsType2->SetMaterial(PE::ruby);
-    BoidsType2->AddBoids(num_boid2);
-    
+    BoidsType2->FearFactor = -1000000;
+    BoidsType2->BoidScale = PE::Vec3{1.f};
+    BoidsType2->SetNeighborDistance(2);
+    BoidsType2->AddBoids(DEFAULT_NUM_BOIDS2);
+    BoidsType2->AddBoidMaterial(PE::red_plastic);
     PE::Graphics::GetInstance()->AddModel(BoidsType2);
+    game_ui->BoidControllers.emplace_back(BoidsType2);
     
     BoidsType1->AddFearedBoids(BoidsType2);
-    
-    // Set up Game UI
-    game_ui = new GameUI();
-    GameUI::SetInstance(game_ui);
-    
-    game_ui->bc1 = BoidsType1;
-    game_ui->bc2 = BoidsType2;
+    BoidsType2->AddFearedBoids(BoidsType1);
 }
 
 bool GameLoop(float dt)
@@ -99,8 +79,8 @@ bool GameLoop(float dt)
     static float mouse_speed = 0.001f;
     static float cam_speed = 10;
     
-    BoidsType1->Update(dt);
-    BoidsType2->Update(dt);
+    for (auto * bc : game_ui->BoidControllers)
+        bc->Update(dt);
     
     auto keystate = SDL_GetKeyboardState(nullptr);
     if (keystate[SDL_SCANCODE_W] || keystate[SDL_SCANCODE_UP])
@@ -199,7 +179,7 @@ bool GameLoop(float dt)
 
 void GameShutdown()
 {
-    delete BoidsType1;
-    delete BoidsType2;
+    for (auto * bc : game_ui->BoidControllers)
+        delete bc;
 }
 

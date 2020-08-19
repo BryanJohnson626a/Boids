@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <vector>
+
 class BoidController;
 class GameUI
 {
@@ -9,8 +11,7 @@ public:
     static void SetInstance(GameUI * game_ui);
     static GameUI * GetGameUI();
     void UpdateGameUI();
-    BoidController * bc1;
-    BoidController * bc2;
+    std::vector<BoidController *> BoidControllers;
 private:
     static GameUI * instance;
 };

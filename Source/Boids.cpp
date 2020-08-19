@@ -203,11 +203,9 @@ void BoidController::UpdateForce(Boid & boid)
     PE::Vec3 area_force = AreaVector(boid) * AreaFactor;
     boid.force += area_force;
     
-    // Can't normalize a 0 vector and velocity isn't changing so just stop.
-    if (boid.force == PE::Vec3{0})
-        return;
-    
-    boid.force = glm::normalize(boid.force);
+    // Can't normalize a 0 vector
+    if (boid.force != PE::Vec3{0})
+        boid.force = glm::normalize(boid.force);
 }
 
 void BoidController::MoveBoid(Boid & boid, float dt)
@@ -359,7 +357,6 @@ PE::Vector BoidController::AlignVector(const Boid & boid) const
         bVector += Boids[i].velocity;
     
     bVector = glm::normalize(bVector);
-    
     return bVector;
 }
 
@@ -381,10 +378,16 @@ PE::Vector BoidController::FearVector(const BoidController::Boid & boid) const
     // For each group of feared boids, calculate for each neighboring boid from that group.
     for (uint feared_group = 0; feared_group < boid.fear_neighbors.size(); ++feared_group)
         for (uint feared_boid = 0; feared_boid < boid.fear_neighbors[feared_group].size(); ++feared_boid)
-            bVector += boid.position - FearedBoids[feared_group]->Boids[feared_boid].position;
+        {
+            auto other = FearedBoids[feared_group]->Boids[feared_boid];
+            float dist2 = glm::distance2(other.position, boid.position);
+            if (dist2 != 0.f)
+                bVector += (boid.position - other.position) / dist2;
+        }
     
-    if (bVector != PE::Vec3{0})
-        bVector = glm::normalize(bVector);
+    // We don't know if there were any feared boids in range, so we have to check for a 0 vector.
+    //if (bVector != PE::Vec3{0})
+    //    bVector = glm::normalize(bVector);
     
     return bVector;
 }
